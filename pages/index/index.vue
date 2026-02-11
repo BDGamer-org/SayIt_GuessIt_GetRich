@@ -17,7 +17,7 @@
       <view class="time-options">
         <button class="time-btn" @click="startGame(60)">60 秒</button>
         <button class="time-btn" @click="startGame(120)">120 秒</button>
-		<button class="time-btn" @click="startGame(120)">180 秒</button>
+		<button class="time-btn" @click="startGame(180)">180 秒</button>
       </view>
       <text class="back-text" @click="gameStatus = 'home'">返回上一级</text>
     </view>
