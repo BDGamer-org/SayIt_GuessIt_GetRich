@@ -1,0 +1,17 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "你说我猜马上发财",
+				"pageOrientation": "landscape", 
+				"app-plus": {
+					"titleNView": false
+				}
+			}
+		}
+	],
+	"globalStyle": {
+		"pageOrientation": "landscape"
+	}
+}

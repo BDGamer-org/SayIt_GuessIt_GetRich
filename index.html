@@ -1,0 +1,230 @@
+<template>
+	<view style="width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+
+		<view v-if="gameStatus === 'home'">
+			<text style="font-size: 24px; display: block; margin-bottom: 20px;">请选择游戏模式</text>
+			
+			<button @click="selectCategory('idiom')" style="margin-bottom: 10px;">中华成语</button>
+			<button disabled>明星艺人（待解锁）</button>
+			<button disabled>生活常识（待解锁）</button>
+		</view>
+
+		<view v-if="gameStatus === 'setup'">
+			<text style="margin-bottom: 20px;">当前模式：{{ currentCategory }}</text>
+			<text style="display: block; margin-bottom: 10px;">请选择时长：</text>
+			
+			<view style="display: flex; gap: 10px;">
+				<button @click="startGame(60)">60 秒</button>
+				<button @click="startGame(120)">120 秒</button>
+				<button @click="startGame(120)">180 秒</button>
+			</view>
+			
+			<button @click="gameStatus = 'home'" style="margin-top: 20px;">返回上一级</button>
+		</view>
+
+		<view v-if="gameStatus === 'playing'">
+			<text style="position: absolute; top: 20px; right: 20px; font-size: 20px;">剩余: {{ timeLeft }}s</text>
+			
+			<text style="font-size: 60px; font-weight: bold;">{{ currentWord }}</text>
+			
+			<text style="position: absolute; bottom: 20px; font-size: 14px; color: gray;">
+				状态: {{ motionStatus }} ({{ debugValue }})
+			</text>
+		</view>
+
+		<view v-if="gameStatus === 'result'">
+			<text style="font-size: 30px; display: block; margin-bottom: 20px;">时间到！</text>
+			<text style="font-size: 20px; display: block; margin-bottom: 30px;">最终得分: {{ score }}</text>
+			
+			<view style="display: flex; gap: 20px;">
+				<button @click="gameStatus = 'setup'">再来一局</button>
+				
+				<button @click="gameStatus = 'home'">回到首页</button>
+			</view>
+		</view>
+
+	</view>
+</template>
+
+<script>
+	import idiomData from '@/static/data/idioms.js';
+	export default {
+		data() {
+			return {
+				// --- 状态机控制 ---
+				gameStatus: 'home', // 枚举: home | setup | playing | result
+				currentCategory: '', // 'idiom'
+				
+				// --- 游戏数据 ---
+				score: 0,
+				timeLeft: 0,
+				currentWord: '',
+				wordList: [],     // 本局题目缓存池
+				
+				// --- 传感器控制 ---
+				isLocked: false,  // 防抖锁
+				timerInterval: null,
+				
+				// --- 调试数据 (UI上显示，方便后端调试传感器) ---
+				motionStatus: '等待翻转',
+				debugValue: 0
+			}
+		},
+		onUnload() {
+			this.stopGameLogic();
+		},
+		methods: {
+			// 1. 选择模式 -> 进入设置页
+			selectCategory(type) {
+				this.currentCategory = type;
+				this.gameStatus = 'setup';
+			},
+
+			// 2. 开始游戏 -> 进入游戏页
+			async startGame(time) {
+				this.timeLeft = time;
+				this.score = 0;
+				this.gameStatus = 'playing';
+				this.motionStatus = '请将手机举至额头';
+				
+				// 获取题目 (这里是后端对接点)
+				await this.fetchWords();
+				
+				this.nextWord();
+				this.startTimer();
+				this.startMotion(); // 启动传感器
+			},
+
+			// --- 核心：获取题目与去重 ---
+			async fetchWords() {
+				// 使用 [...idiomData] 创建一个浅拷贝，防止修改原数据
+				let allWords = [...idiomData];
+	
+				// 2. 本地去重逻辑 (1小时缓存)
+				let history = uni.getStorageSync('played_history') || [];
+				const now = Date.now();
+					
+				// 清理旧数据：只保留 1 小时内的记录
+				history = history.filter(h => now - h.time < 3600 * 1000); 
+				uni.setStorageSync('played_history', history); // 更新缓存
+					
+					// 提取历史记录里的 word_id
+					const blackIds = history.map(h => h.word_id);
+					
+					// 3. 过滤掉玩过的词
+					// 【关键】这里用 item.word_id 来判断
+					const validWords = allWords.filter(item => !blackIds.includes(item.word_id));
+					
+					// 4. 如果没词了(玩通关了)，就重置，用全部词兜底
+					if (validWords.length === 0) {
+						console.log('题目已耗尽，重置题库');
+						this.wordList = allWords;
+					} else {
+						// 5. 为了增加随机性，建议在这里打乱一下数组顺序 (洗牌算法)
+						// 如果不打乱，每次都是按顺序出题
+						this.wordList = validWords.sort(() => Math.random() - 0.5);
+					}
+				},
+			// --- 核心：切题 ---
+			nextWord() {
+				if (this.wordList.length === 0) {
+					this.endGame();
+					return;
+				}
+				
+				// 弹出一个新词
+				const wordObj = this.wordList.pop();
+				
+				// 【修改点A】这里要用 .word
+				this.currentWord = wordObj.word; 
+				
+				// 记录历史
+				let history = uni.getStorageSync('played_history') || [];
+				// 【修改点B】这里要存 .word_id
+				history.push({ word_id: wordObj.word_id, time: Date.now() }); 
+				uni.setStorageSync('played_history', history);
+			},
+
+			// --- 核心：重力感应 (iOS/Android 适配难点) ---
+			startMotion() {
+				// 频率设置：game (20ms/次) 或 ui (60ms/次)
+				uni.startDeviceMotionListening({
+					interval: 'ui',
+					success: () => {
+						uni.onDeviceMotionChange((res) => {
+							this.handleSensor(res);
+						});
+					}
+				});
+			},
+
+			handleSensor(res) {
+				if (this.gameStatus !== 'playing') return;
+
+				// 【重点调试区】
+				// 横屏模式下，iOS 通常看 gamma，Android 可能看 beta
+				// 这里取 gamma 做演示，上架前请务必用真机看屏幕下方的 debugValue
+				const val = res.gamma; 
+				this.debugValue = val.toFixed(1); // 实时显示数值方便你调试
+
+				// 1. 解锁逻辑：手机回正 (数值接近 -90 或 90，视手持方向而定)
+				// 假设手持正对前方时 val 约为 0 (需真机确认) 或者 -90
+				// 这里假设垂直状态是 abs(val) < 20 (如果不准，请调整此阈值)
+				if (this.isLocked) {
+					if (Math.abs(val) < 20) { 
+						this.isLocked = false;
+						this.motionStatus = '准备就绪';
+					}
+					return;
+				}
+
+				// 2. 判定逻辑
+				// 阈值设为 60 度
+				if (val > 60) {
+					this.triggerResult(true); // 向下翻 -> 正确
+				} else if (val < -60) {
+					this.triggerResult(false); // 向上翻 -> 跳过
+				}
+			},
+
+			triggerResult(isCorrect) {
+				this.isLocked = true;
+				
+				// 只有震动反馈
+				uni.vibrateShort();
+
+				if (isCorrect) {
+					this.score++;
+					this.motionStatus = '正确! (+1)';
+				} else {
+					this.motionStatus = '跳过';
+				}
+
+				// 0.8秒后切题
+				setTimeout(() => {
+					this.nextWord();
+				}, 800);
+			},
+
+			// --- 计时器 ---
+			startTimer() {
+				this.timerInterval = setInterval(() => {
+					this.timeLeft--;
+					if (this.timeLeft <= 0) {
+						this.endGame();
+					}
+				}, 1000);
+			},
+
+			endGame() {
+				this.stopGameLogic();
+				this.gameStatus = 'result';
+			},
+
+			stopGameLogic() {
+				clearInterval(this.timerInterval);
+				uni.stopDeviceMotionListening();
+			}
+		}
+	}
+</script>
