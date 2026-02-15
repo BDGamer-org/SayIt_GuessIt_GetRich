@@ -292,7 +292,7 @@
   .energy-pill {
     position: absolute;
     top: 20px;
-    left: 20px;
+    left: 40px;
     display: flex;
     align-items: center;
     background: #7dd3fc;
@@ -355,40 +355,49 @@
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    padding: 0 60px;
+    padding: 0 20px;
   }
   .scroll-area {
     display: flex;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
   }
   .arrow {
-    font-size: 28px;
+    font-size: 24px;
     color: #999;
-    padding: 0 15px;
+    padding: 0 8px;
     font-family: monospace;
+    flex-shrink: 0;
   }
   .category-scroll {
     flex: 1;
-    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   .card-container {
     display: flex;
-    gap: 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
     padding: 10px 0;
   }
   .category-card {
-    display: inline-block;
+    display: flex;
+    flex-shrink: 0;
   }
   .card-sketch {
-    width: 140px;
-    height: 100px;
+    width: 200px;
+    height: 140px;
     background: #fff;
     border: 3px solid #333;
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -404,9 +413,11 @@
     transform: rotate(-2deg);
   }
   .card-title {
-    font-size: 36px;
+    font-size: 48px;
     font-weight: bold;
     color: #333;
+    text-align: center;
+    line-height: 1;
   }
 
   /* === Modal Overlay === */
