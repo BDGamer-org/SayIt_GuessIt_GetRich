@@ -1,45 +1,134 @@
 <template>
-  <view class="container" :style="{backgroundColor: bgColor}">
+  <view class="container">
 
-    <view v-if="gameStatus === 'home'" class="center-box">
-      <text class="app-title">你说我猜马上发财</text>
-      <text class="sub-title">请选择游戏模式</text>
-      <view class="btn-group">
-        <button class="main-btn" @click="selectCategory('idiom')">成语猜猜</button>
-		<button class="main-btn">生活猜猜（画饼中）</button>
-		<button class="main-btn">艺人猜猜（画饼中）</button>
+    <!-- ENERGY PILL (Home & Setup) -->
+    <view v-if="gameStatus === 'home' || gameStatus === 'setup'" class="energy-pill">
+      <text class="icon-flash">⚡</text>
+      <text class="energy-count">5</text>
+      <view class="plus-btn">+</view>
+    </view>
+
+    <!-- RIGHT SIDE MENU (Home only) -->
+    <view v-if="gameStatus === 'home'" class="right-menu">
+      <view class="menu-icon" @click="toggleSound">🔊</view>
+      <view class="menu-icon" @click="openSettings">⚙️</view>
+      <view class="menu-icon" @click="share">⤴️</view>
+    </view>
+
+    <!-- === HOME SCREEN === -->
+    <view v-if="gameStatus === 'home'" class="home-screen">
+      <view class="scroll-area">
+        <text class="arrow left">⟨</text>
+        <scroll-view class="category-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="card-container">
+            <!-- Active Category -->
+            <view class="category-card active" @click="selectCategory('idiom')">
+              <view class="card-sketch">
+                <text class="card-title">成语</text>
+              </view>
+            </view>
+            <!-- Placeholder 1 -->
+            <view class="category-card placeholder">
+              <view class="card-sketch dashed">
+                <text class="card-title">1</text>
+              </view>
+            </view>
+            <!-- Placeholder 2 -->
+            <view class="category-card placeholder">
+              <view class="card-sketch dashed">
+                <text class="card-title">2</text>
+              </view>
+            </view>
+          </view>
+        </scroll-view>
+        <text class="arrow right">⟩</text>
       </view>
     </view>
 
-    <view v-if="gameStatus === 'setup'" class="center-box">
-      <text class="sub-title">当前模式：成语猜猜</text>
-      <text class="hint">请选择游戏时长</text>
-      <view class="time-options">
-        <button class="time-btn" @click="startGame(60)">60 秒</button>
-        <button class="time-btn" @click="startGame(120)">120 秒</button>
-		<button class="time-btn" @click="startGame(180)">180 秒</button>
+    <!-- === SETUP MODAL === -->
+    <view v-if="gameStatus === 'setup'" class="modal-overlay">
+      <view class="paper-card">
+        <!-- Binder clips -->
+        <view class="clips">
+          <view class="clip"></view>
+          <view class="clip"></view>
+        </view>
+
+        <view class="card-content">
+          <text class="card-main-title">成语</text>
+          <text class="card-subtitle">一人答题 · 一人描述</text>
+
+          <view class="time-section">
+            <text class="time-label">选择游戏时间</text>
+            <view class="time-options">
+              <view class="time-item" :class="{active: selectedTime===60}" @click="selectedTime=60">
+                <view class="checkbox">{{ selectedTime===60 ? '☑' : '☐' }}</view>
+                <text>60s</text>
+              </view>
+              <view class="time-item" :class="{active: selectedTime===120}" @click="selectedTime=120">
+                <view class="checkbox">{{ selectedTime===120 ? '☑' : '☐' }}</view>
+                <text>120s</text>
+              </view>
+              <view class="time-item" :class="{active: selectedTime===180}" @click="selectedTime=180">
+                <view class="checkbox">{{ selectedTime===180 ? '☑' : '☐' }}</view>
+                <text>180s</text>
+              </view>
+            </view>
+          </view>
+
+          <view class="card-buttons">
+            <view class="sketch-btn primary" @click="startGame(selectedTime)">开始游戏</view>
+            <view class="cancel-link" @click="gameStatus='home'">Cancel</view>
+          </view>
+        </view>
       </view>
-      <text class="back-text" @click="gameStatus = 'home'">返回上一级</text>
     </view>
 
-    <view v-if="gameStatus === 'playing'" class="game-area">
-      <view class="exit-btn" @click="quitGame">退出</view>
-
-      <text class="timer-text">{{ timeLeft }}s</text>
-      <text class="word-text">{{ currentWord }}</text>
-      
-      <view class="debug-info">
-        <text style="font-size: 20px; font-weight: bold;">{{ motionStatus }}</text>
-        <text style="font-size: 14px; opacity: 0.8; margin-top: 5px;">{{ debugValue }}</text>
+    <!-- === GAME SCREEN === -->
+    <view v-if="gameStatus === 'playing'" class="game-screen">
+      <!-- Top Info Bar -->
+      <view class="game-header">
+        <view class="info-item">
+          <text class="info-label">剩余 秒</text>
+          <text class="info-value">{{ timeLeft }}</text>
+        </view>
+        <view class="info-item right">
+          <text class="info-label">答对数量</text>
+          <text class="info-value">{{ score }}</text>
+        </view>
       </view>
+
+      <!-- Main Word Card -->
+      <view class="word-card">
+        <text class="word-text">{{ currentWord }}</text>
+      </view>
+
+      <!-- Quit button -->
+      <view class="quit-btn" @click="quitGame">✕</view>
     </view>
 
-    <view v-if="gameStatus === 'result'" class="center-box">
-      <text class="result-title">时间到！</text>
-      <text class="score-text">最终得分: {{ score }}</text>
-      <view class="btn-group">
-        <button class="main-btn" @click="restartGame">再来一局</button>
-        <button class="sub-btn" @click="gameStatus = 'home'">回到首页</button>
+    <!-- === RESULT MODAL === -->
+    <view v-if="gameStatus === 'result'" class="modal-overlay">
+      <view class="paper-card result">
+        <!-- Binder clips -->
+        <view class="clips">
+          <view class="clip"></view>
+          <view class="clip"></view>
+        </view>
+
+        <view class="card-content">
+          <text class="card-main-title">结算</text>
+
+          <view class="result-section">
+            <text class="result-label">答对总数:</text>
+            <text class="result-value">{{ score }}</text>
+          </view>
+
+          <view class="result-buttons">
+            <view class="sketch-btn" @click="restartGame">再来一局</view>
+            <view class="sketch-btn secondary" @click="gameStatus='home'">退出</view>
+          </view>
+        </view>
       </view>
     </view>
 
@@ -55,18 +144,11 @@
         gameStatus: 'home',
         score: 0,
         timeLeft: 60,
-        lastTime: 60,
-        currentWord: '准备...',
+        selectedTime: 120,
+        lastTime: 120,
+        currentWord: '准备',
         wordList: [],
-        
-        isLocked: false,  
-        bgColor: '#3b82f6', 
-        
-        // 调试显示
-        //motionStatus: '请将手机横屏举至额头',
-        //debugValue: '传感器准备中...',
-        
-        // 定时器
+        isLocked: false,
         timerInterval: null
       }
     },
@@ -74,51 +156,45 @@
       this.stopAll();
     },
     methods: {
-      selectCategory(type) {
-        this.gameStatus = 'setup';
+      toggleSound() {
+        uni.showToast({ title: '声音开关', icon: 'none' });
       },
-
+      openSettings() {
+        uni.showToast({ title: '设置', icon: 'none' });
+      },
+      share() {
+        uni.showToast({ title: '分享', icon: 'none' });
+      },
+      selectCategory(type) {
+        if (type === 'idiom') {
+          this.gameStatus = 'setup';
+        }
+      },
       async startGame(time) {
         this.lastTime = time;
         this.timeLeft = time;
         this.score = 0;
         this.gameStatus = 'playing';
-        this.bgColor = '#3b82f6';
-        this.motionStatus = '请将手机举至额头';
         this.isLocked = false;
-        
+
         await this.fetchWords();
         this.nextWord();
-        
         this.startTimer();
         this.startMotion();
       },
-
       quitGame() {
-        uni.showModal({
-          title: '退出',
-          content: '确定要结束吗？',
-          success: (res) => {
-            if (res.confirm) {
-              this.stopAll();
-              this.gameStatus = 'home';
-            }
-          }
-        });
+        this.stopAll();
+        this.gameStatus = 'home';
       },
-
       restartGame() {
         this.startGame(this.lastTime);
       },
-
       stopAll() {
         if (this.timerInterval) clearInterval(this.timerInterval);
-		
         if (uni.stopAccelerometer) {
-            uni.stopAccelerometer();
+          uni.stopAccelerometer();
         }
       },
-
       endGame() {
         this.stopAll();
         this.$nextTick(() => {
@@ -126,21 +202,18 @@
         });
         uni.vibrateLong();
       },
-
       async fetchWords() {
         let allWords = [...idiomData];
         this.wordList = allWords.sort(() => Math.random() - 0.5);
       },
-
       nextWord() {
         if (this.wordList.length === 0) {
           this.endGame();
           return;
         }
         const w = this.wordList.pop();
-        this.currentWord = w.word || w.w; 
+        this.currentWord = w.word || w.w;
       },
-
       startTimer() {
         if (this.timerInterval) clearInterval(this.timerInterval);
         this.timerInterval = setInterval(() => {
@@ -150,155 +223,440 @@
           }
         }, 1000);
       },
-
       startMotion() {
-        if(uni.stopAccelerometer) uni.stopAccelerometer();
+        if (uni.stopAccelerometer) uni.stopAccelerometer();
 
-        // 启动加速度监听
         uni.startAccelerometer({
           interval: 'game',
           success: () => {
-            console.log('加速度计启动成功');
-            this.debugValue = '正在读取数据...';
-            
-            // 监听数据变化
             uni.onAccelerometerChange((res) => {
               this.handleAccelerometer(res);
             });
           },
           fail: (err) => {
-            console.error('启动失败', err);
-            this.debugValue = '启动失败: ' + JSON.stringify(err);
-            uni.showToast({title: '请检查手机权限', icon:'none'});
+            console.error('Failed to start accelerometer', err);
           }
         });
       },
+      handleAccelerometer(res) {
+        if (this.gameStatus !== 'playing') return;
+        const z = res.z;
 
- handleAccelerometer(res) {
-         if (this.gameStatus !== 'playing') return;
- 
-         const z = res.z;
-         
-         //this.debugValue = `Z轴读数: ${z.toFixed(1)}`;
+        if (this.isLocked) {
+          if (z > -2 && z < 5) {
+            this.isLocked = false;
+          }
+          return;
+        }
 
-         if (this.isLocked) {
-            if (z > -2 && z < 5) {
-              this.isLocked = false;
-              this.motionStatus = '请出题...';
-              this.bgColor = '#3b82f6';
-            }
-            return;
-         }
-         
-         //向下扣：正确
-         if (z < -5) {
-           this.triggerResult(true);
-         }
-         
-         // 向上仰：跳过
-         else if (z > 7) {
-           this.triggerResult(false);
-         }
-       },
-
+        // Face Down: Correct (z < -5)
+        if (z < -5) {
+          this.triggerResult(true);
+        }
+        // Face Up: Skip (z > 7)
+        else if (z > 7) {
+          this.triggerResult(false);
+        }
+      },
       triggerResult(isCorrect) {
         this.isLocked = true;
         uni.vibrateShort();
 
         if (isCorrect) {
           this.score++;
-          this.motionStatus = '回答正确! (+1)';
-          this.bgColor = '#22c55e';
-        } else {
-          this.motionStatus = '跳过';
-          this.bgColor = '#f59e0b';
         }
 
-        // 延迟切题
         setTimeout(() => {
           this.nextWord();
-        }, 500);
+        }, 800);
       }
     }
   }
 </script>
 
 <style>
+  /* === Grid Background === */
   .container {
     width: 100vw;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    transition: background-color 0.3s;
-    /* 防止刘海屏遮挡 */
-    padding-left: 50px; 
-    padding-right: 50px;
-  }
-  
-  .center-box, .game-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #f8f6f0;
+    background-image:
+      linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
+    background-size: 20px 20px;
   }
 
-  .exit-btn {
+  /* === Energy Pill === */
+  .energy-pill {
     position: absolute;
     top: 20px;
     left: 20px;
-    background: rgba(0,0,0,0.3);
-    padding: 8px 15px;
-    border-radius: 20px;
-    font-size: 14px;
-    z-index: 999;
+    display: flex;
+    align-items: center;
+    background: #7dd3fc;
+    border: 2px solid #333;
+    border-radius: 25px;
+    padding: 6px 12px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+  .icon-flash {
+    font-size: 18px;
+    margin-right: 4px;
+  }
+  .energy-count {
+    font-size: 20px;
+    font-weight: bold;
+    color: #fff;
+    -webkit-text-stroke: 1px #333;
+    margin-right: 10px;
+  }
+  .plus-btn {
+    width: 22px;
+    height: 22px;
+    background: #333;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
   }
 
-  .timer-text {
+  /* === Right Menu === */
+  .right-menu {
     position: absolute;
-    top: 20px;
     right: 20px;
-    font-size: 24px;
-    font-weight: bold;
-  }
-
-  .word-text {
-    font-size: 80px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.2;
-    margin-bottom: 40px;
-  }
-
-  .debug-info {
-    position: absolute;
-    bottom: 20px;
-    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+  }
+  .menu-icon {
+    width: 44px;
+    height: 44px;
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
   }
 
-  /* 按钮通用 */
-  .btn-group { display: flex; gap: 20px; margin-top: 30px; }
-  .time-options { display: flex; gap: 20px; margin: 30px 0; }
-  
-  .main-btn, .time-btn, .sub-btn {
-    background: white;
+  /* === Home Screen === */
+  .home-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 60px;
+  }
+  .scroll-area {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+  }
+  .arrow {
+    font-size: 28px;
+    color: #999;
+    padding: 0 15px;
+    font-family: monospace;
+  }
+  .category-scroll {
+    flex: 1;
+    white-space: nowrap;
+  }
+  .card-container {
+    display: flex;
+    gap: 20px;
+    padding: 10px 0;
+  }
+  .category-card {
+    display: inline-block;
+  }
+  .card-sketch {
+    width: 140px;
+    height: 100px;
+    background: #fff;
+    border: 3px solid #333;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+    transform: rotate(-1deg);
+  }
+  .card-sketch.dashed {
+    border-style: dashed;
+    opacity: 0.6;
+  }
+  .category-card.active .card-sketch {
+    background: #fff9e6;
+    transform: rotate(-2deg);
+  }
+  .card-title {
+    font-size: 36px;
+    font-weight: bold;
     color: #333;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 50px;
-    font-size: 18px;
+  }
+
+  /* === Modal Overlay === */
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(248, 246, 240, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+
+  /* === Paper Card (Sketch Style) === */
+  .paper-card {
+    width: 420px;
+    max-width: 85%;
+    background: #fff;
+    border: 3px solid #333;
+    border-radius: 8px;
+    position: relative;
+    box-shadow:
+      4px 4px 0 rgba(0,0,0,0.1),
+      inset 0 0 40px rgba(0,0,0,0.02);
+    transform: rotate(0.5deg);
+  }
+  .paper-card::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 1px dashed rgba(0,0,0,0.2);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+  .paper-card.result {
+    transform: rotate(-0.5deg);
+  }
+
+  /* Binder Clips */
+  .clips {
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+  }
+  .clip {
+    width: 14px;
+    height: 28px;
+    background: #555;
+    border-radius: 8px;
+    border: 2px solid #333;
+    position: relative;
+  }
+  .clip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -2px;
+    right: -2px;
+    height: 2px;
+    background: #333;
+  }
+
+  .card-content {
+    padding: 40px 30px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .card-main-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  .card-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 30px;
+  }
+
+  /* === Time Selection === */
+  .time-section {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+  .time-label {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+  }
+  .time-options {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+  }
+  .time-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 16px;
+    color: #666;
+    cursor: pointer;
+  }
+  .time-item.active {
+    color: #f97316;
     font-weight: bold;
   }
-  
-  .sub-btn { background: rgba(255,255,255,0.8); }
-  
-  .app-title { font-size: 40px; font-weight: bold; margin-bottom: 10px; }
-  .result-title { font-size: 40px; margin-bottom: 20px; }
-  .score-text { font-size: 60px; font-weight: bold; color: #fbbf24; }
-  .back-text { text-decoration: underline; opacity: 0.8; margin-top: 10px;}
+  .checkbox {
+    font-size: 18px;
+  }
+
+  /* === Buttons === */
+  .card-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+  .sketch-btn {
+    padding: 12px 40px;
+    background: #fff;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+  }
+  .sketch-btn.primary {
+    background: #facc15;
+  }
+  .sketch-btn.secondary {
+    background: #f3f4f6;
+  }
+  .cancel-link {
+    color: #999;
+    font-size: 14px;
+    text-decoration: underline;
+  }
+
+  /* === Result Screen === */
+  .result-section {
+    margin: 30px 0;
+    text-align: center;
+  }
+  .result-label {
+    font-size: 18px;
+    color: #666;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .result-value {
+    font-size: 72px;
+    font-weight: 900;
+    color: #333;
+    line-height: 1;
+  }
+  .result-buttons {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  /* === Game Screen === */
+  .game-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 40px;
+  }
+  /* Motion status indicator - shown during gameplay */
+  .motion-status {
+    margin-top: 30px;
+    padding: 10px 30px;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.8);
+    font-size: 18px;
+    color: #666;
+  }
+  .game-header {
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .info-item {
+    text-align: left;
+  }
+  .info-item.right {
+    text-align: right;
+  }
+  .info-label {
+    font-size: 14px;
+    color: #666;
+    display: block;
+  }
+  .info-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+  }
+  .word-card {
+    width: 80%;
+    max-width: 500px;
+    min-height: 200px;
+    background: #fff;
+    border: 3px solid #333;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
+    transform: rotate(-0.5deg);
+  }
+  .word-text {
+    font-size: 56px;
+    font-weight: bold;
+    color: #333;
+    letter-spacing: 8px;
+  }
+  .quit-btn {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.8);
+    border: 2px solid #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #666;
+  }
 </style>
