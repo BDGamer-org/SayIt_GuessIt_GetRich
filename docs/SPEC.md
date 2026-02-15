@@ -222,15 +222,34 @@ OK
 
 ```
 SayIt_GuessIt_GetRich/
+├── components/                # Vue components
+│   ├── PaperCard.vue          # Reusable card with binder clips
+│   ├── SketchButton.vue       # Styled button component
+│   ├── EnergyPill.vue         # Energy indicator
+│   ├── RightMenu.vue          # Side menu icons
+│   └── screens/               # Screen components
+│       ├── AuthScreen.vue     # Login/register
+│       ├── BackupScreen.vue   # Backup code display
+│       ├── HomeScreen.vue     # Category selection
+│       ├── SetupScreen.vue    # Time selection
+│       ├── GameScreen.vue     # Active gameplay
+│       ├── ResultScreen.vue   # Score display
+│       └── HistoryScreen.vue  # User records
+├── composables/               # Logic composables
+│   ├── useGameApi.js          # API calls
+│   └── useGameLogic.js        # Game mechanics
 ├── pages/
 │   └── index/
-│       └── index.vue          # Main game component (all screens)
+│       └── index.vue          # Main orchestrator (~393 lines)
 ├── static/
 │   └── data/
 │       └── idioms.js          # Word database
 ├── docs/
 │   ├── SPEC.md                # This file
+│   ├── COMPONENT_SPEC.md      # Component specs
+│   ├── API_SPEC.md            # API documentation
 │   ├── design.md              # UI design specifications
+│   ├── DEPLOYMENT.md          # Deployment guide
 │   ├── auth-setup.sql         # Database setup
 │   └── worker-simple.js       # Cloudflare Worker code
 ├── manifest.json              # App manifest
@@ -333,6 +352,59 @@ uni.request({
 
 ```javascript
 const API_BASE_URL = 'https://sgit-api.bdgamer.org';
+```
+
+---
+
+## Composables
+
+### useGameApi.js
+
+Centralizes all API calls using uni.request with callbacks.
+
+**Functions:**
+| Function | Parameters | Returns |
+|----------|------------|---------|
+| `register(playerName, onSuccess, onError)` | player name, callbacks | Calls API, invokes callback |
+| `recover(backupCode, onSuccess, onError)` | backup code, callbacks | Calls API, invokes callback |
+| `fetchHistory(playerId, onSuccess, onError)` | player ID, callbacks | Returns history array |
+| `submitScore(playerId, score, onSuccess, onError)` | player ID, score, callbacks | Submits score |
+
+**Usage:**
+```javascript
+import { useGameApi } from '@/composables/useGameApi.js';
+
+// In setup()
+const { register, submitScore } = useGameApi();
+
+// In methods
+register(
+  this.tempName,
+  (data) => { /* success */ },
+  (error) => { /* error */ }
+);
+```
+
+---
+
+### useGameLogic.js
+
+Encapsulates game mechanics and motion controls.
+
+**Functions:**
+| Function | Parameters | Description |
+|----------|------------|-------------|
+| `fetchWords()` | - | Returns shuffled word list |
+| `startMotion(onTilt)` | callback | Starts accelerometer |
+| `stopMotion()` | - | Stops accelerometer |
+| `handleTilt(res, isLocked, onCorrect, onPass, onReset)` | sensor data, state, callbacks | Processes tilt |
+
+**Motion Thresholds:**
+```javascript
+const CORRECT_THRESHOLD = -5;   // Tilt down (forward)
+const PASS_THRESHOLD = 7;       // Tilt up (backward)
+const RESET_MIN = -2;           // Neutral zone lower
+const RESET_MAX = 5;            // Neutral zone upper
 ```
 
 ---
@@ -556,15 +628,53 @@ Run the SQL in Supabase SQL Editor to:
 
 ## Files Reference
 
+### Core Files
+
+| File | Purpose | Lines |
+|------|---------|-------|
+| `pages/index/index.vue` | Main orchestrator component | ~393 |
+| `static/data/idioms.js` | Word database | - |
+
+### Components
+
+| File | Purpose | Props | Emits |
+|------|---------|-------|-------|
+| `components/PaperCard.vue` | Reusable card with binder clips | `modifier` | - |
+| `components/SketchButton.vue` | Styled button | `type` | `click` |
+| `components/EnergyPill.vue` | Energy indicator | `count` | `add` |
+| `components/RightMenu.vue` | Side menu icons | - | `history, sound, settings` |
+| `components/screens/AuthScreen.vue` | Login/register | `isRegister, tempName, backupCodeInput, error, success` | `submit, switch, update:*` |
+| `components/screens/BackupScreen.vue` | Backup code display | `backupCode` | `continue` |
+| `components/screens/HomeScreen.vue` | Category selection | - | `select, showHistory, toggleSound, openSettings, addEnergy` |
+| `components/screens/SetupScreen.vue` | Time selection | `selectedTime` | `start, cancel, update:selectedTime` |
+| `components/screens/GameScreen.vue` | Active gameplay | `timeLeft, score, currentWord` | `quit` |
+| `components/screens/ResultScreen.vue` | Score display | `score, submitStatus` | `restart, home, submit` |
+| `components/screens/HistoryScreen.vue` | User records | `history, loading` | `refresh, close` |
+
+### Composables
+
 | File | Purpose |
 |------|---------|
-| `pages/index/index.vue` | Main game component (1084 lines) |
-| `static/data/idioms.js` | Word database |
-| `docs/design.md` | UI/UX specifications |
+| `composables/useGameApi.js` | API calls (register, recover, history, submit) |
+| `composables/useGameLogic.js` | Game mechanics (words, motion, tilt handling) |
+
+### Documentation
+
+| File | Purpose |
+|------|---------|
+| `docs/design.md` | UI/UX design system |
 | `docs/SPEC.md` | This technical spec |
+| `docs/API_SPEC.md` | API endpoint documentation |
+| `docs/COMPONENT_SPEC.md` | Component specifications |
+| `docs/DEPLOYMENT.md` | Deployment guide |
 | `docs/auth-setup.sql` | Database schema |
 | `docs/worker-simple.js` | Cloudflare Worker API |
 | `docs/worker-auth.js` | Alternative JWT-based API (unused) |
+
+### Config
+
+| File | Purpose |
+|------|---------|
 | `manifest.json` | App configuration |
 | `pages.json` | Page routing |
 
@@ -574,6 +684,7 @@ Run the SQL in Supabase SQL Editor to:
 
 | Date | Change |
 |------|--------|
+| 2024-02-15 | Refactored: Split monolithic index.vue into components and composables |
 | 2024-02-15 | Converted API calls from async/await to callbacks |
 | 2024-02-15 | Fixed duplicate authMode declaration |
 | 2024-02-15 | Initial complete implementation |

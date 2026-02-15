@@ -1,19 +1,50 @@
 # Component Specification
 
+## Component Overview
+
+All components are Vue 3 single-file components (SFC) using uni-app.
+
+### Directory Structure
+```
+components/
+├── PaperCard.vue          # Reusable card component
+├── SketchButton.vue       # Button component
+├── EnergyPill.vue         # Energy indicator
+├── RightMenu.vue          # Side menu
+└── screens/               # Screen components
+    ├── AuthScreen.vue
+    ├── BackupScreen.vue
+    ├── HomeScreen.vue
+    ├── SetupScreen.vue
+    ├── GameScreen.vue
+    ├── ResultScreen.vue
+    └── HistoryScreen.vue
+```
+
+---
+
 ## Global Components
 
 ### EnergyPill
 
-**Location**: Fixed top-left of Home and Setup screens
+**File**: `components/EnergyPill.vue`
 
-**Structure:**
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `count` | Number | 5 | Energy count to display |
+
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `add` | Clicked on plus button |
+
+**Usage:**
 ```vue
-<view class="energy-pill">
-  <text class="icon-flash">⚡</text>
-  <text class="energy-count">5</text>
-  <view class="plus-btn">+</view>
-</view>
+<EnergyPill :count="5" @add="handleAddEnergy" />
 ```
+
+**Location**: Fixed top-left of Home and Setup screens
 
 **Styling:**
 | Property | Value |
@@ -41,16 +72,21 @@
 
 ### RightMenu
 
-**Location**: Fixed right side of Home screen
+**File**: `components/RightMenu.vue`
 
-**Structure:**
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `history` | History icon clicked |
+| `sound` | Sound icon clicked |
+| `settings` | Settings icon clicked |
+
+**Usage:**
 ```vue
-<view class="right-menu">
-  <view class="menu-icon" @click="showUserHistory">📋</view>
-  <view class="menu-icon" @click="toggleSound">🔊</view>
-  <view class="menu-icon" @click="openSettings">⚙️</view>
-</view>
+<RightMenu @history="showUserHistory" @sound="toggleSound" @settings="openSettings" />
 ```
+
+**Location**: Fixed right side of Home screen
 
 **Styling:**
 | Property | Value |
@@ -81,20 +117,32 @@
 
 ### PaperCard
 
-**Usage**: Modal dialogs (Setup, Result, History, Auth, Backup)
+**File**: `components/PaperCard.vue`
 
-**Structure:**
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `modifier` | String | '' | Style modifier: '', 'result', 'history', 'auth', 'backup' |
+
+**Slots:**
+| Slot | Description |
+|------|-------------|
+| `default` | Card content |
+
+**Usage:**
 ```vue
-<view class="paper-card [modifier]">
-  <view class="clips">
-    <view class="clip"></view>
-    <view class="clip"></view>
-  </view>
-  <view class="card-content">
-    <!-- Content here -->
-  </view>
-</view>
+<PaperCard modifier="result">
+  <text class="card-main-title">结算</text>
+  <!-- ... -->
+</PaperCard>
 ```
+
+**Modifiers:**
+| Modifier | Transform |
+|----------|-----------|
+| (none) | rotate(0.5deg) |
+| `result` | rotate(-0.5deg) |
+| `history`, `auth`, `backup` | rotate(0.3deg), max-height: 85% |
 
 **Base Styling:**
 | Property | Value |
@@ -147,11 +195,28 @@
 
 ### SketchButton
 
-**Usage**: Primary and secondary actions
+**File**: `components/SketchButton.vue`
 
-**Structure:**
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `type` | String | '' | Button style: '', 'primary', 'secondary' |
+
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `click` | Button clicked |
+
+**Slots:**
+| Slot | Description |
+|------|-------------|
+| `default` | Button text |
+
+**Usage:**
 ```vue
-<view class="sketch-btn [modifier]">Button Text</view>
+<SketchButton type="primary" @click="startGame">开始游戏</SketchButton>
+<SketchButton type="secondary" @click="cancel">退出</SketchButton>
+<SketchButton @click="restart">再来一局</SketchButton>
 ```
 
 **Base Styling:**
@@ -174,54 +239,48 @@
 
 ---
 
-## Screen-Specific Components
+## Screen Components
 
-### AuthModal
+### AuthScreen
 
-**Status**: `gameStatus === 'auth'`
+**File**: `components/screens/AuthScreen.vue`
 
-**States:**
-- `authMode === 'register'`: Show registration form
-- `authMode === 'recover'`: Show recovery form
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `isRegister` | Boolean | true = register mode, false = recover mode |
+| `tempName` | String | v-model for name input (register mode) |
+| `backupCodeInput` | String | v-model for backup code input (recover mode) |
+| `error` | String | Error message to display |
+| `success` | String | Success message to display |
 
-**Register Form:**
-```
-Title: "新玩家"
-Subtitle: "创建你的游戏档案"
-Input Label: "你的名字:"
-Input: text (placeholder: "输入昵称", maxLength: 12)
-Hint: "保存好你的备份码，换设备时需要用到"
-[Error/Success message]
-Button: "创建账号"
-Link: "已有备份码? 点击恢复"
-```
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `update:tempName` | Name input changed |
+| `update:backupCodeInput` | Backup code input changed |
+| `submit` | Submit button clicked |
+| `switch` | Switch mode link clicked |
 
-**Recover Form:**
-```
-Title: "恢复账号"
-Subtitle: "输入备份码恢复记录"
-Input Label: "备份码:"
-Input: text (placeholder: "如: ABC12345", maxLength: 8)
-Hint: "输入之前保存的8位备份码"
-[Error/Success message]
-Button: "恢复记录"
-Link: "新玩家? 创建账号"
-```
+**Used In**: `gameStatus === 'auth'`
 
 ---
 
-### BackupCodeDisplay
+### BackupScreen
 
-**Status**: `gameStatus === 'backup'`
+**File**: `components/screens/BackupScreen.vue`
 
-**Structure:**
-```
-Title: "保存备份码"
-Subtitle: "换设备或重装时需要用到"
-[Yellow box with backup code - monospace, 32px, letter-spacing: 4px]
-Warning: "请截图保存或记住此代码!"
-Button: "我已保存，开始游戏"
-```
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `backupCode` | String | The backup code to display |
+
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `continue` | Continue button clicked |
+
+**Used In**: `gameStatus === 'backup'`
 
 **Backup Code Styling:**
 | Property | Value |
@@ -235,18 +294,30 @@ Button: "我已保存，开始游戏"
 
 ---
 
-### CategoryScroll
+### HomeScreen
 
-**Status**: `gameStatus === 'home'`
+**File**: `components/screens/HomeScreen.vue`
+
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `select` | Category selected (emits category type) |
+| `showHistory` | History icon clicked |
+| `toggleSound` | Sound icon clicked |
+| `openSettings` | Settings icon clicked |
+| `addEnergy` | Add energy button clicked |
+
+**Used In**: `gameStatus === 'home'`
 
 **Structure:**
 ```
-[Left Arrow ⟨]
-[ScrollView horizontal]
+[EnergyPill]
+[RightMenu]
+[Category Scroll]
+  - Left Arrow ⟨
   - Category Card (active): "成语"
-  - Category Card (placeholder): "1"
-  - Category Card (placeholder): "2"
-[Right Arrow ⟩]
+  - Category Card (placeholder): "1", "2"
+  - Right Arrow ⟩
 ```
 
 **Active Card Styling:**
@@ -275,24 +346,23 @@ Button: "我已保存，开始游戏"
 
 ---
 
-### SetupModal
+### SetupScreen
 
-**Status**: `gameStatus === 'setup'`
+**File**: `components/screens/SetupScreen.vue`
 
-**Structure:**
-```
-Title: "成语"
-Subtitle: "一人答题 · 一人描述"
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `selectedTime` | Number | v-model for selected time (60, 120, 180) |
 
-[Time Selection]
-Label: "选择游戏时间"
-Options:
-  ☐ 60s   ☑ 120s   ☐ 180s
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `update:selectedTime` | Time selection changed |
+| `start` | Start game button clicked |
+| `cancel` | Cancel link clicked |
 
-Buttons:
-  Primary: "开始游戏"
-  Link: "Cancel"
-```
+**Used In**: `gameStatus === 'setup'`
 
 **Time Item Styling:**
 | State | Style |
@@ -308,21 +378,21 @@ Buttons:
 
 ### GameScreen
 
-**Status**: `gameStatus === 'playing'`
+**File**: `components/screens/GameScreen.vue`
 
-**Layout:**
-```
-[Header - absolute top]
-  Left: "剩余 秒" + timeLeft
-  Right: "答对数量" + score
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `timeLeft` | Number | Seconds remaining |
+| `score` | Number | Current score |
+| `currentWord` | String | Current word to display |
 
-[Center]
-  Word Card (80% width, min 200px height)
-    Text: currentWord (56px, bold, letter-spacing: 8px)
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `quit` | Quit button clicked |
 
-[Bottom Right - absolute]
-  Quit Button: ✕
-```
+**Used In**: `gameStatus === 'playing'`
 
 **Header Styling:**
 | Property | Value |
@@ -369,53 +439,78 @@ Buttons:
 
 ---
 
-### ResultModal
+### ResultScreen
 
-**Status**: `gameStatus === 'result'`
+**File**: `components/screens/ResultScreen.vue`
 
-**Structure:**
-```
-Title: "结算"
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `score` | Number | Final score to display |
+| `submitStatus` | String | Upload status message |
 
-[Result Section]
-Label: "答对总数:"
-Value: [score] (64px, black weight)
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `restart` | Play again button clicked |
+| `home` | Exit button clicked |
+| `submit` | Submit score button clicked |
 
-[Status text - optional]
-"上传中..." / "上传成功!" / "网络错误"
-
-Buttons:
-  "再来一局"
-  "退出" (secondary)
-  "上传分数" (primary)
-```
+**Used In**: `gameStatus === 'result'`
 
 ---
 
-### HistoryModal
+### HistoryScreen
 
-**Status**: `gameStatus === 'history'`
+**File**: `components/screens/HistoryScreen.vue`
 
-**Structure:**
+**Props:**
+| Prop | Type | Description |
+|------|------|-------------|
+| `history` | Array | List of score records |
+| `loading` | Boolean | Loading state |
+
+**Events:**
+| Event | Description |
+|-------|-------------|
+| `refresh` | Refresh button clicked |
+| `close` | Close link clicked |
+
+**Methods:**
+| Method | Description |
+|--------|-------------|
+| `formatDate(dateString)` | Formats ISO date to "MM-DD HH:mm" |
+
+**Used In**: `gameStatus === 'history'`
+
+---
+
+## Component Relationships
+
 ```
-Title: "我的记录"
-Subtitle: "最近 10 场游戏"
-
-[Loading state]
-"加载中..."
-
-[History list - scroll-view]
-#1  02-15 14:30    15分
-#2  02-15 13:15    12分
-...
-
-[Empty state]
-"暂无游戏记录"
-
-Buttons:
-  "刷新"
-  "关闭" (link)
+index.vue (orchestrator)
+├── AuthScreen (auth)
+├── BackupScreen (backup)
+├── HomeScreen (home)
+│   ├── EnergyPill
+│   └── RightMenu
+├── SetupScreen (setup)
+│   └── PaperCard
+│       └── SketchButton
+├── GameScreen (playing)
+├── ResultScreen (result)
+│   └── PaperCard
+│       └── SketchButton
+└── HistoryScreen (history)
+    └── PaperCard
+        └── SketchButton
 ```
+
+**Reusable Components:**
+- `PaperCard` - Used by: AuthScreen, BackupScreen, SetupScreen, ResultScreen, HistoryScreen
+- `SketchButton` - Used by: AuthScreen, BackupScreen, SetupScreen, ResultScreen, HistoryScreen
+- `EnergyPill` - Used by: HomeScreen
+- `RightMenu` - Used by: HomeScreen
 
 **History Item:**
 | Property | Value |
