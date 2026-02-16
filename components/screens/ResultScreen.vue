@@ -48,7 +48,7 @@ export default {
 }
 
 .card-main-title {
-  font-size: 32px;
+  font-size: var(--modal-title-size, 32px);
   font-weight: bold;
   color: #333;
   margin-bottom: 8px;
