@@ -64,21 +64,21 @@ export default {
 }
 
 .card-main-title {
-  font-size: 32px;
+  font-size: var(--modal-title-size, 32px);
   font-weight: bold;
   color: #333;
   margin-bottom: 8px;
 }
 
 .card-subtitle {
-  font-size: 14px;
+  font-size: var(--modal-subtitle-size, 14px);
   color: #666;
   margin-bottom: 25px;
 }
 
 .history-list {
   width: 100%;
-  max-height: 280px;
+  max-height: var(--history-max-height, 280px);
   margin: 15px 0;
 }
 
