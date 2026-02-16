@@ -1,5 +1,5 @@
 <template>
-  <view class="container">
+  <view class="container" :class="ratioProfile">
     <!-- Auth Screen -->
     <AuthScreen
       v-if="gameStatus === 'auth'"
@@ -125,8 +125,8 @@ export default {
       timerInterval: null,
       recentWordIds: [],
       startingGame: false,
-      cloudWordCache: {},
       currentWordSource: '',
+      ratioProfile: 'ratio-19-5-9',
 
       // Auth
       playerId: '',
@@ -146,15 +146,47 @@ export default {
   },
 
   mounted() {
+    this.updateRatioProfile();
+    if (uni.onWindowResize) {
+      this._handleWindowResize = () => {
+        this.updateRatioProfile();
+      };
+      uni.onWindowResize(this._handleWindowResize);
+    }
     this.loadRecentWords();
     this.checkAuth();
   },
 
   onUnload() {
+    if (uni.offWindowResize && this._handleWindowResize) {
+      uni.offWindowResize(this._handleWindowResize);
+      this._handleWindowResize = null;
+    }
     this.stopAll();
   },
 
   methods: {
+    updateRatioProfile() {
+      const info = uni.getSystemInfoSync ? uni.getSystemInfoSync() : {};
+      const width = Number(info.windowWidth || info.screenWidth || 0);
+      const height = Number(info.windowHeight || info.screenHeight || 0);
+      if (!width || !height) {
+        this.ratioProfile = 'ratio-19-5-9';
+        return;
+      }
+
+      const ratio = height / width;
+      if (ratio <= 2.03) {
+        this.ratioProfile = 'ratio-16-9';
+        return;
+      }
+      if (ratio <= 2.195) {
+        this.ratioProfile = 'ratio-19-5-9';
+        return;
+      }
+      this.ratioProfile = 'ratio-20-9';
+    },
+
     // Auth
     checkAuth() {
       try {
@@ -290,37 +322,47 @@ export default {
         .filter((item) => Number.isFinite(item.word_id) && !!item.word);
     },
 
-    fetchCloudWords(category) {
-      if (this.cloudWordCache[category]) {
-        return Promise.resolve(this.cloudWordCache[category]);
-      }
+    getCloudFetchLimit(gameSeconds) {
+      if (gameSeconds <= 60) return 220;
+      if (gameSeconds <= 120) return 320;
+      return 450;
+    },
 
+    fetchCloudWords(category, options = {}) {
+      const { gameSeconds = 120 } = options;
+      const limit = this.getCloudFetchLimit(gameSeconds);
+      const excludeIds = this.recentWordIds.slice(-RECENT_WORD_LIMIT);
       return new Promise((resolve) => {
-        this.fetchWordBank(
-          category,
-          (data) => {
-            const normalized = this.normalizeWords(data);
-            if (normalized.length > 0) {
-              this.cloudWordCache = {
-                ...this.cloudWordCache,
-                [category]: normalized
-              };
-              resolve(normalized);
-              return;
+        const requestWords = (excludeList, allowRetry) => {
+          this.fetchWordBank(
+            category,
+            { limit, excludeIds: excludeList },
+            (data) => {
+              const normalized = this.normalizeWords(data);
+              if (normalized.length > 0) {
+                resolve(normalized);
+                return;
+              }
+              if (allowRetry && excludeList.length) {
+                requestWords([], false);
+                return;
+              }
+              resolve(null);
+            },
+            (error) => {
+              console.error('Cloud word bank fallback:', error);
+              resolve(null);
             }
-            resolve(null);
-          },
-          (error) => {
-            console.error('Cloud word bank fallback:', error);
-            resolve(null);
-          }
-        );
+          );
+        };
+
+        requestWords(excludeIds, true);
       });
     },
 
-    async buildGameWords(category) {
+    async buildGameWords(category, gameSeconds) {
       const excludeIds = new Set(this.recentWordIds);
-      const cloudWords = await this.fetchCloudWords(category);
+      const cloudWords = await this.fetchCloudWords(category, { gameSeconds });
 
       if (cloudWords && cloudWords.length > 0) {
         this.currentWordSource = 'cloud';
@@ -350,7 +392,7 @@ export default {
       this.currentWordSource = '';
 
       try {
-        this.wordList = await this.buildGameWords(this.selectedCategory);
+        this.wordList = await this.buildGameWords(this.selectedCategory, time);
 
         if (!this.wordList.length) {
           uni.showToast({ title: '词库为空', icon: 'none' });
@@ -496,6 +538,45 @@ export default {
 <style>
 /* Grid Background */
 .container {
+  --edge-gap: 20px;
+  --edge-gap-wide: 40px;
+  --modal-title-size: 32px;
+  --modal-subtitle-size: 14px;
+  --paper-card-width: 420px;
+  --paper-card-max-height: 85%;
+  --paper-card-padding-top: 40px;
+  --paper-card-padding-x: 30px;
+  --paper-card-padding-bottom: 30px;
+  --sketch-btn-font-size: 16px;
+  --sketch-btn-pad-y: 12px;
+  --sketch-btn-pad-x: 28px;
+  --energy-top: 20px;
+  --energy-left: 40px;
+  --energy-pill-padding-y: 6px;
+  --energy-pill-padding-x: 12px;
+  --energy-icon-size: 18px;
+  --energy-count-size: 20px;
+  --energy-plus-size: 22px;
+  --menu-right: 20px;
+  --menu-bottom: 20px;
+  --menu-gap: 12px;
+  --menu-icon-size: 44px;
+  --menu-icon-font-size: 20px;
+  --home-horizontal-padding: 20px;
+  --home-card-width: 200px;
+  --home-card-height: 140px;
+  --home-card-title-size: 48px;
+  --home-card-gap: 24px;
+  --game-screen-padding-y: 20px;
+  --game-screen-padding-x: 40px;
+  --game-header-top: 20px;
+  --game-word-font-size: 56px;
+  --game-word-letter-spacing: 8px;
+  --game-word-min-height: 200px;
+  --game-info-value-size: 32px;
+  --game-quit-size: 40px;
+  --game-quit-font-size: 18px;
+  --history-max-height: 280px;
   width: 100vw;
   height: 100vh;
   position: relative;
@@ -505,5 +586,62 @@ export default {
     linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px),
     linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+.container.ratio-16-9 {
+  --edge-gap: 14px;
+  --edge-gap-wide: 26px;
+  --modal-title-size: 28px;
+  --modal-subtitle-size: 13px;
+  --paper-card-width: 380px;
+  --paper-card-padding-top: 30px;
+  --paper-card-padding-x: 20px;
+  --paper-card-padding-bottom: 22px;
+  --sketch-btn-font-size: 15px;
+  --sketch-btn-pad-y: 10px;
+  --sketch-btn-pad-x: 20px;
+  --energy-top: 14px;
+  --energy-left: 24px;
+  --energy-pill-padding-y: 5px;
+  --energy-pill-padding-x: 10px;
+  --energy-icon-size: 16px;
+  --energy-count-size: 18px;
+  --energy-plus-size: 20px;
+  --menu-right: 14px;
+  --menu-bottom: 14px;
+  --menu-gap: 10px;
+  --menu-icon-size: 40px;
+  --menu-icon-font-size: 18px;
+  --home-horizontal-padding: 12px;
+  --home-card-width: 170px;
+  --home-card-height: 118px;
+  --home-card-title-size: 40px;
+  --home-card-gap: 14px;
+  --game-screen-padding-y: 12px;
+  --game-screen-padding-x: 24px;
+  --game-header-top: 12px;
+  --game-word-font-size: 46px;
+  --game-word-letter-spacing: 5px;
+  --game-word-min-height: 170px;
+  --game-info-value-size: 28px;
+  --game-quit-size: 36px;
+  --game-quit-font-size: 16px;
+  --history-max-height: 220px;
+}
+
+.container.ratio-20-9 {
+  --edge-gap: 22px;
+  --edge-gap-wide: 44px;
+  --modal-title-size: 34px;
+  --paper-card-width: 440px;
+  --paper-card-padding-top: 44px;
+  --home-card-width: 208px;
+  --home-card-height: 150px;
+  --home-card-title-size: 50px;
+  --home-card-gap: 26px;
+  --game-word-font-size: 60px;
+  --game-word-min-height: 220px;
+  --game-info-value-size: 34px;
+  --history-max-height: 320px;
 }
 </style>
