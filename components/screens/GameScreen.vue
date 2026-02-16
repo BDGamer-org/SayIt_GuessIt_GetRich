@@ -38,14 +38,14 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px 40px;
+  padding: var(--game-screen-padding-y, 20px) var(--game-screen-padding-x, 40px);
 }
 
 .game-header {
   position: absolute;
-  top: 20px;
-  left: 40px;
-  right: 40px;
+  top: var(--game-header-top, 20px);
+  left: var(--game-screen-padding-x, 40px);
+  right: var(--game-screen-padding-x, 40px);
   display: flex;
   justify-content: space-between;
 }
@@ -65,7 +65,7 @@ export default {
 }
 
 .info-value {
-  font-size: 32px;
+  font-size: var(--game-info-value-size, 32px);
   font-weight: bold;
   color: #333;
 }
@@ -73,7 +73,7 @@ export default {
 .word-card {
   width: 80%;
   max-width: 500px;
-  min-height: 200px;
+  min-height: var(--game-word-min-height, 200px);
   background: #fff;
   border: 3px solid #333;
   border-radius: 16px;
@@ -85,25 +85,25 @@ export default {
 }
 
 .word-text {
-  font-size: 56px;
+  font-size: var(--game-word-font-size, 56px);
   font-weight: bold;
   color: #333;
-  letter-spacing: 8px;
+  letter-spacing: var(--game-word-letter-spacing, 8px);
 }
 
 .quit-btn {
   position: absolute;
-  bottom: 30px;
-  right: 30px;
-  width: 40px;
-  height: 40px;
+  bottom: calc(var(--edge-gap, 20px) + 10px);
+  right: calc(var(--edge-gap, 20px) + 10px);
+  width: var(--game-quit-size, 40px);
+  height: var(--game-quit-size, 40px);
   background: rgba(255,255,255,0.8);
   border: 2px solid #333;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: var(--game-quit-font-size, 18px);
   color: #666;
 }
 </style>
