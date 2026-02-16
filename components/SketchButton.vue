@@ -18,11 +18,11 @@ export default {
 
 <style scoped>
 .sketch-btn {
-  padding: 12px 28px;
+  padding: var(--sketch-btn-pad-y, 12px) var(--sketch-btn-pad-x, 28px);
   background: #fff;
   border: 2px solid #333;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: var(--sketch-btn-font-size, 16px);
   font-weight: bold;
   color: #333;
   box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
