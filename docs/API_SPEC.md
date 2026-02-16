@@ -132,14 +132,15 @@ Get words from `word_bank`.
 
 **Request:**
 ```http
-GET /api/words?category=idiom&limit=10000
+GET /api/words?category=idiom&limit=320&exclude=10001,10002
 ```
 
 **Query Parameters:**
 | Name | Required | Description |
 |------|----------|-------------|
 | `category` | No | `idiom` or `life` |
-| `limit` | No | Max rows, default `10000` |
+| `limit` | No | Max rows, default `320`, upper bound `500` |
+| `exclude` | No | Comma-separated `word_id` list to skip (e.g. `10001,10002`) |
 
 **Response (200 OK):**
 ```json
