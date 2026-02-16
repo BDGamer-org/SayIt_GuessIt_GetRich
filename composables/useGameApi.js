@@ -87,10 +87,14 @@ export function useGameApi() {
   };
 
   // Fetch word bank from backend
-  const fetchWordBank = (category, onSuccess, onError) => {
+  const fetchWordBank = (category, options = {}, onSuccess, onError) => {
+    const { limit = 320, excludeIds = [] } = options;
     const params = [];
     if (category) params.push(`category=${encodeURIComponent(category)}`);
-    params.push('limit=10000');
+    params.push(`limit=${encodeURIComponent(String(limit))}`);
+    if (Array.isArray(excludeIds) && excludeIds.length) {
+      params.push(`exclude=${encodeURIComponent(excludeIds.join(','))}`);
+    }
     const query = params.length ? `?${params.join('&')}` : '';
 
     uni.request({
