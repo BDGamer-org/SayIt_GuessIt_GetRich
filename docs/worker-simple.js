@@ -123,16 +123,43 @@ export default {
       // Get words
       if (path === '/api/words' && request.method === 'GET') {
         const category = url.searchParams.get('category')
-        const requestedLimit = Number(url.searchParams.get('limit') || '10000')
+        const requestedLimit = Number(url.searchParams.get('limit') || '320')
         const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
-          ? Math.min(requestedLimit, 10000)
-          : 10000
+          ? Math.min(requestedLimit, 500)
+          : 320
+        const exclude = (url.searchParams.get('exclude') || '')
+          .split(',')
+          .map((id) => id.trim())
+          .filter((id) => /^\d+$/.test(id))
+          .slice(0, 300)
 
-        let query = `${env.SUPABASE_URL}/rest/v1/word_bank?select=word_id,word,category&order=word_id.asc&limit=${limit}`
+        let baseQuery = `${env.SUPABASE_URL}/rest/v1/word_bank?select=word_id,word,category`
         if (category) {
-          query += `&category=eq.${encodeURIComponent(category)}`
+          baseQuery += `&category=eq.${encodeURIComponent(category)}`
+        }
+        if (exclude.length) {
+          baseQuery += `&word_id=not.in.(${exclude.join(',')})`
         }
 
+        // Keep payload small and avoid always returning the same first page.
+        let offset = 0
+        const countRes = await fetch(`${baseQuery}&limit=1`, {
+          headers: {
+            'apikey': env.SUPABASE_SERVICE_KEY,
+            'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            'Prefer': 'count=exact'
+          }
+        })
+
+        if (countRes.ok) {
+          const range = countRes.headers.get('content-range') || ''
+          const total = Number(range.split('/')[1] || '0')
+          if (Number.isFinite(total) && total > limit) {
+            offset = Math.floor(Math.random() * (total - limit + 1))
+          }
+        }
+
+        const query = `${baseQuery}&order=word_id.asc&limit=${limit}&offset=${offset}`
         const response = await fetch(query, {
           headers: {
             'apikey': env.SUPABASE_SERVICE_KEY,
