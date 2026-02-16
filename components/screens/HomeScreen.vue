@@ -7,14 +7,22 @@
       <text class="arrow left">⟨</text>
       <scroll-view class="category-scroll" scroll-x="true" show-scrollbar="false">
         <view class="card-container">
-          <view class="category-card active" @click="$emit('select', 'idiom')">
+          <view
+            class="category-card"
+            :class="{ active: selectedCategory === 'idiom' }"
+            @click="$emit('select', 'idiom')"
+          >
             <view class="card-sketch">
-              <text class="card-title">成语</text>
+              <text class="card-title">中华成语</text>
             </view>
           </view>
-          <view class="category-card placeholder">
-            <view class="card-sketch dashed">
-              <text class="card-title">1</text>
+          <view
+            class="category-card"
+            :class="{ active: selectedCategory === 'life' }"
+            @click="$emit('select', 'life')"
+          >
+            <view class="card-sketch">
+              <text class="card-title">日常生活</text>
             </view>
           </view>
           <view class="category-card placeholder">
@@ -35,6 +43,12 @@ import RightMenu from '../RightMenu.vue';
 
 export default {
   components: { EnergyPill, RightMenu },
+  props: {
+    selectedCategory: {
+      type: String,
+      default: 'idiom'
+    }
+  },
   emits: ['select', 'showHistory', 'toggleSound', 'openSettings', 'addEnergy']
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <view class="modal-overlay">
     <PaperCard>
-      <text class="card-main-title">成语</text>
+      <text class="card-main-title">{{ categoryLabel }}</text>
       <text class="card-subtitle">一人答题 · 一人描述</text>
 
       <view class="time-section">
@@ -37,7 +37,11 @@ import SketchButton from '../SketchButton.vue';
 export default {
   components: { PaperCard, SketchButton },
   props: {
-    selectedTime: Number
+    selectedTime: Number,
+    categoryLabel: {
+      type: String,
+      default: '成语'
+    }
   },
   emits: ['update:selectedTime', 'start', 'cancel']
 }
