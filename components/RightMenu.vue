@@ -15,24 +15,24 @@ export default {
 <style scoped>
 .right-menu {
   position: absolute;
-  right: 20px;
-  bottom: 20px;
+  right: var(--menu-right, 20px);
+  bottom: var(--menu-bottom, 20px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--menu-gap, 12px);
   z-index: 10;
 }
 
 .menu-icon {
-  width: 44px;
-  height: 44px;
+  width: var(--menu-icon-size, 44px);
+  height: var(--menu-icon-size, 44px);
   background: #fff;
   border: 2px solid #333;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: var(--menu-icon-font-size, 20px);
   box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
 }
 </style>
