@@ -21,25 +21,25 @@ export default {
 <style scoped>
 .energy-pill {
   position: absolute;
-  top: 20px;
-  left: 40px;
+  top: var(--energy-top, 20px);
+  left: var(--energy-left, 40px);
   display: flex;
   align-items: center;
   background: #7dd3fc;
   border: 2px solid #333;
   border-radius: 25px;
-  padding: 6px 12px;
+  padding: var(--energy-pill-padding-y, 6px) var(--energy-pill-padding-x, 12px);
   box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
   z-index: 10;
 }
 
 .icon-flash {
-  font-size: 18px;
+  font-size: var(--energy-icon-size, 18px);
   margin-right: 4px;
 }
 
 .energy-count {
-  font-size: 20px;
+  font-size: var(--energy-count-size, 20px);
   font-weight: bold;
   color: #fff;
   -webkit-text-stroke: 1px #333;
@@ -47,8 +47,8 @@ export default {
 }
 
 .plus-btn {
-  width: 22px;
-  height: 22px;
+  width: var(--energy-plus-size, 22px);
+  height: var(--energy-plus-size, 22px);
   background: #333;
   color: #fff;
   border-radius: 50%;
