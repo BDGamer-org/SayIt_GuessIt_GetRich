@@ -4,7 +4,9 @@
     <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" />
 
     <view class="scroll-area">
-      <text class="arrow left">⟨</text>
+      <view class="slide-handle left">
+        <view class="rounded-chevron left"></view>
+      </view>
       <scroll-view class="category-scroll" scroll-x="true" show-scrollbar="false">
         <view class="card-container">
           <view
@@ -27,12 +29,14 @@
           </view>
           <view class="category-card placeholder">
             <view class="card-sketch dashed">
-              <text class="card-title">2</text>
+              <text class="card-title">明星艺人</text>
             </view>
           </view>
         </view>
       </scroll-view>
-      <text class="arrow right">⟩</text>
+      <view class="slide-handle right">
+        <view class="rounded-chevron right"></view>
+      </view>
     </view>
   </view>
 </template>
@@ -61,7 +65,7 @@ export default {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 0 20px;
+  padding: 0 var(--home-horizontal-padding, 20px);
 }
 
 .scroll-area {
@@ -71,14 +75,62 @@ export default {
   justify-content: center;
   width: 100%;
   max-width: 800px;
+  padding: 0 16px;
 }
 
-.arrow {
-  font-size: 24px;
-  color: #999;
-  padding: 0 8px;
-  font-family: monospace;
+.slide-handle {
+  width: 34px;
+  height: var(--home-card-height, 140px);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
   flex-shrink: 0;
+}
+
+.rounded-chevron {
+  position: relative;
+  width: 22px;
+  height: 34px;
+}
+
+.rounded-chevron::before,
+.rounded-chevron::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 20px;
+  background: #333;
+  border-radius: 999px;
+}
+
+.rounded-chevron.left::before {
+  left: 8px;
+  top: -1px;
+  transform-origin: left center;
+  transform: rotate(45deg);
+}
+
+.rounded-chevron.left::after {
+  left: 8px;
+  bottom: -1px;
+  transform-origin: left center;
+  transform: rotate(-45deg);
+}
+
+.rounded-chevron.right::before {
+  right: 8px;
+  top: -1px;
+  transform-origin: right center;
+  transform: rotate(-45deg);
+}
+
+.rounded-chevron.right::after {
+  right: 8px;
+  bottom: -1px;
+  transform-origin: right center;
+  transform: rotate(45deg);
 }
 
 .category-scroll {
@@ -92,26 +144,48 @@ export default {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   padding: 10px 0;
 }
 
 .category-card {
+  position: relative;
   display: flex;
   flex-shrink: 0;
+  z-index: 0;
+}
+
+.category-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  transform: translate(-8px, 8px);
+  border-radius: 16px;
+  border: 2px solid #333;
+  background-color: rgba(200, 200, 200, 0.3);
+  background-image: repeating-linear-gradient(
+    -60deg,
+    rgba(0, 0, 0, 0.35) 0 1.5px,
+    transparent 1.5px 8px
+  );
+  z-index: 0;
+  pointer-events: none;
 }
 
 .card-sketch {
-  width: 200px;
-  height: 140px;
+  width: var(--home-card-width, 200px);
+  height: var(--home-card-height, 140px);
   background: #fff;
   border: 3px solid #333;
   border-radius: 16px;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
-  transform: rotate(-1deg);
+  box-shadow: none;
+  transform: none;
 }
 
 .card-sketch.dashed {
@@ -120,12 +194,12 @@ export default {
 }
 
 .category-card.active .card-sketch {
-  background: #fff9e6;
-  transform: rotate(-2deg);
+  background: #fff;
+  transform: none;
 }
 
 .card-title {
-  font-size: 48px;
+  font-size: var(--home-card-title-size, 48px);
   font-weight: bold;
   color: #333;
   text-align: center;
