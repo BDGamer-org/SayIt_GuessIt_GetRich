@@ -120,6 +120,40 @@ export default {
         })
       }
 
+      // Get words
+      if (path === '/api/words' && request.method === 'GET') {
+        const category = url.searchParams.get('category')
+        const requestedLimit = Number(url.searchParams.get('limit') || '10000')
+        const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+          ? Math.min(requestedLimit, 10000)
+          : 10000
+
+        let query = `${env.SUPABASE_URL}/rest/v1/word_bank?select=word_id,word,category&order=word_id.asc&limit=${limit}`
+        if (category) {
+          query += `&category=eq.${encodeURIComponent(category)}`
+        }
+
+        const response = await fetch(query, {
+          headers: {
+            'apikey': env.SUPABASE_SERVICE_KEY,
+            'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+          }
+        })
+
+        if (!response.ok) {
+          const error = await response.text()
+          return new Response(JSON.stringify({ error }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        const words = await response.json()
+        return new Response(JSON.stringify(words), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
       // Submit score
       if (path === '/api/score' && request.method === 'POST') {
         const playerId = request.headers.get('X-Player-ID')

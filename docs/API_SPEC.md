@@ -126,6 +126,42 @@ X-Player-ID: 550e8400-e29b-41d4-a716-446655440000
 
 ---
 
+### GET /api/words
+
+Get words from `word_bank`.
+
+**Request:**
+```http
+GET /api/words?category=idiom&limit=10000
+```
+
+**Query Parameters:**
+| Name | Required | Description |
+|------|----------|-------------|
+| `category` | No | `idiom` or `life` |
+| `limit` | No | Max rows, default `10000` |
+
+**Response (200 OK):**
+```json
+[
+  {
+    "word_id": 10001,
+    "word": "坚定不移",
+    "category": "idiom"
+  }
+]
+```
+
+**Error Responses:**
+```json
+// 500 Internal Server Error
+{
+  "error": "Database error details"
+}
+```
+
+---
+
 ### POST /api/score
 
 Submit a new score.
