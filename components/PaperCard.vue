@@ -23,7 +23,7 @@ export default {
 
 <style scoped>
 .paper-card {
-  width: 420px;
+  width: var(--paper-card-width, 420px);
   max-width: 85%;
   background: #fff;
   border: 3px solid #333;
@@ -41,7 +41,7 @@ export default {
 .paper-card.auth,
 .paper-card.backup {
   transform: rotate(0.3deg);
-  max-height: 85%;
+  max-height: var(--paper-card-max-height, 85%);
 }
 
 .paper-card::before {
@@ -86,7 +86,10 @@ export default {
 }
 
 .card-content {
-  padding: 40px 30px 30px;
+  padding:
+    var(--paper-card-padding-top, 40px)
+    var(--paper-card-padding-x, 30px)
+    var(--paper-card-padding-bottom, 30px);
   display: flex;
   flex-direction: column;
   align-items: center;
