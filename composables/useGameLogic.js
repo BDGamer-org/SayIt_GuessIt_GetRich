@@ -1,9 +1,28 @@
 import idiomData from '@/static/data/idioms.js';
+import lifeData from '@/static/data/life_fixed.js';
 
 export function useGameLogic() {
+  const getLocalWords = (category = 'idiom') => {
+    if (category === 'life') {
+      return lifeData;
+    }
+    return idiomData;
+  };
+
   // Prepare shuffled word list
-  const fetchWords = () => {
-    const allWords = [...idiomData];
+  const fetchWords = (options = {}) => {
+    const { excludeIds, sourceWords, category = 'idiom' } = options;
+    const localWords = getLocalWords(category);
+    const baseWords = Array.isArray(sourceWords) && sourceWords.length ? sourceWords : localWords;
+    let allWords = [...baseWords];
+
+    if (excludeIds && excludeIds.size) {
+      allWords = allWords.filter((w) => !excludeIds.has(w.word_id));
+      if (allWords.length === 0) {
+        allWords = [...baseWords];
+      }
+    }
+
     return allWords.sort(() => Math.random() - 0.5);
   };
 
@@ -54,6 +73,7 @@ export function useGameLogic() {
   };
 
   return {
+    getLocalWords,
     fetchWords,
     startMotion,
     stopMotion,

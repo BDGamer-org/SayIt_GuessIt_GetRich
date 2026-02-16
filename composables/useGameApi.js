@@ -86,10 +86,34 @@ export function useGameApi() {
     });
   };
 
+  // Fetch word bank from backend
+  const fetchWordBank = (category, onSuccess, onError) => {
+    const params = [];
+    if (category) params.push(`category=${encodeURIComponent(category)}`);
+    params.push('limit=10000');
+    const query = params.length ? `?${params.join('&')}` : '';
+
+    uni.request({
+      url: `${API_BASE_URL}/api/words${query}`,
+      success: (res) => {
+        if (res.statusCode === 200 && Array.isArray(res.data)) {
+          onSuccess(res.data);
+          return;
+        }
+        onError(res.data?.error || '词库加载失败');
+      },
+      fail: (err) => {
+        console.error('Fetch word bank error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
   return {
     register,
     recover,
     fetchHistory,
-    submitScore
+    submitScore,
+    fetchWordBank
   };
 }

@@ -22,6 +22,7 @@
     <!-- Home Screen -->
     <HomeScreen
       v-if="gameStatus === 'home'"
+      :selected-category="selectedCategory"
       @select="selectCategory"
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
@@ -32,6 +33,7 @@
     <SetupScreen
       v-if="gameStatus === 'setup'"
       v-model:selected-time="selectedTime"
+      :category-label="selectedCategory === 'life' ? '日常生活' : '成语'"
       @start="startGame(selectedTime)"
       @cancel="gameStatus = 'home'"
     />
@@ -77,6 +79,9 @@ import HistoryScreen from '@/components/screens/HistoryScreen.vue';
 import { useGameApi } from '@/composables/useGameApi.js';
 import { useGameLogic } from '@/composables/useGameLogic.js';
 
+const RECENT_WORD_LIMIT = 200;
+const RECENT_WORD_STORAGE_KEY = 'recentWordIds';
+
 export default {
   components: {
     AuthScreen,
@@ -89,7 +94,7 @@ export default {
   },
 
   setup() {
-    const { register, recover, fetchHistory, submitScore: apiSubmitScore } = useGameApi();
+    const { register, recover, fetchHistory, submitScore: apiSubmitScore, fetchWordBank } = useGameApi();
     const { fetchWords, startMotion, stopMotion, handleTilt } = useGameLogic();
 
     return {
@@ -97,6 +102,7 @@ export default {
       recover,
       fetchHistory,
       apiSubmitScore,
+      fetchWordBank,
       fetchWords,
       startMotion,
       stopMotion,
@@ -111,10 +117,16 @@ export default {
       timeLeft: 60,
       selectedTime: 120,
       lastTime: 120,
+      selectedCategory: 'idiom',
       currentWord: '准备',
+      currentWordId: null,
       wordList: [],
       isLocked: false,
       timerInterval: null,
+      recentWordIds: [],
+      startingGame: false,
+      cloudWordCache: {},
+      currentWordSource: '',
 
       // Auth
       playerId: '',
@@ -134,6 +146,7 @@ export default {
   },
 
   mounted() {
+    this.loadRecentWords();
     this.checkAuth();
   },
 
@@ -230,7 +243,8 @@ export default {
     },
 
     selectCategory(type) {
-      if (type === 'idiom') {
+      if (type === 'idiom' || type === 'life') {
+        this.selectedCategory = type;
         this.gameStatus = 'setup';
       }
     },
@@ -243,29 +257,127 @@ export default {
       uni.showToast({ title: '设置', icon: 'none' });
     },
 
+    loadRecentWords() {
+      try {
+        const saved = uni.getStorageSync(RECENT_WORD_STORAGE_KEY);
+        if (Array.isArray(saved)) {
+          this.recentWordIds = saved.filter((id) => Number.isFinite(id));
+        }
+      } catch (e) {
+        this.recentWordIds = [];
+      }
+    },
+
+    addRecentWordId(wordId) {
+      const id = Number(wordId);
+      if (!Number.isFinite(id)) return;
+      const idx = this.recentWordIds.indexOf(id);
+      if (idx !== -1) this.recentWordIds.splice(idx, 1);
+      this.recentWordIds.push(id);
+      if (this.recentWordIds.length > RECENT_WORD_LIMIT) {
+        this.recentWordIds.splice(0, this.recentWordIds.length - RECENT_WORD_LIMIT);
+      }
+      uni.setStorageSync(RECENT_WORD_STORAGE_KEY, this.recentWordIds);
+    },
+
+    normalizeWords(items) {
+      if (!Array.isArray(items)) return [];
+      return items
+        .map((item) => ({
+          word_id: Number(item.word_id),
+          word: item.word
+        }))
+        .filter((item) => Number.isFinite(item.word_id) && !!item.word);
+    },
+
+    fetchCloudWords(category) {
+      if (this.cloudWordCache[category]) {
+        return Promise.resolve(this.cloudWordCache[category]);
+      }
+
+      return new Promise((resolve) => {
+        this.fetchWordBank(
+          category,
+          (data) => {
+            const normalized = this.normalizeWords(data);
+            if (normalized.length > 0) {
+              this.cloudWordCache = {
+                ...this.cloudWordCache,
+                [category]: normalized
+              };
+              resolve(normalized);
+              return;
+            }
+            resolve(null);
+          },
+          (error) => {
+            console.error('Cloud word bank fallback:', error);
+            resolve(null);
+          }
+        );
+      });
+    },
+
+    async buildGameWords(category) {
+      const excludeIds = new Set(this.recentWordIds);
+      const cloudWords = await this.fetchCloudWords(category);
+
+      if (cloudWords && cloudWords.length > 0) {
+        this.currentWordSource = 'cloud';
+        console.log(`[WordBank] source=cloud category=${category} count=${cloudWords.length}`);
+        return this.fetchWords({
+          excludeIds,
+          sourceWords: cloudWords
+        });
+      }
+
+      this.currentWordSource = 'local';
+      console.log(`[WordBank] source=local category=${category}`);
+      return this.fetchWords({ excludeIds, category });
+    },
+
     // Game
-    startGame(time) {
+    async startGame(time) {
+      if (this.startingGame) return;
+      this.startingGame = true;
+
       this.lastTime = time;
       this.timeLeft = time;
       this.score = 0;
       this.submitStatus = '';
-      this.gameStatus = 'playing';
       this.isLocked = false;
+      this.currentWordId = null;
+      this.currentWordSource = '';
 
-      this.wordList = this.fetchWords();
-      this.nextWord();
-      this.startTimer();
+      try {
+        this.wordList = await this.buildGameWords(this.selectedCategory);
 
-      this.startMotion((res) => {
-        if (this.gameStatus !== 'playing') return;
-        this.handleTilt(
-          res,
-          this.isLocked,
-          () => this.triggerResult(true),
-          () => this.triggerResult(false),
-          () => { this.isLocked = false; }
-        );
-      });
+        if (!this.wordList.length) {
+          uni.showToast({ title: '词库为空', icon: 'none' });
+          return;
+        }
+
+        const categoryName = this.selectedCategory === 'life' ? '日常生活' : '中华成语';
+        const sourceName = this.currentWordSource === 'cloud' ? '云端' : '本地';
+        uni.showToast({ title: `${sourceName}词库 · ${categoryName}`, icon: 'none' });
+
+        this.gameStatus = 'playing';
+        this.nextWord();
+        this.startTimer();
+
+        this.startMotion((res) => {
+          if (this.gameStatus !== 'playing') return;
+          this.handleTilt(
+            res,
+            this.isLocked,
+            () => this.triggerResult(true),
+            () => this.triggerResult(false),
+            () => { this.isLocked = false; }
+          );
+        });
+      } finally {
+        this.startingGame = false;
+      }
     },
 
     quitGame() {
@@ -298,6 +410,10 @@ export default {
       }
       const w = this.wordList.pop();
       this.currentWord = w.word || w.w;
+      this.currentWordId = w.word_id ?? w.id ?? null;
+      if (this.currentWordId !== null) {
+        this.addRecentWordId(this.currentWordId);
+      }
     },
 
     startTimer() {
