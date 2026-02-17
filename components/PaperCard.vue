@@ -38,15 +38,10 @@ export default {
 }
 
 .paper-card.history,
+.paper-card.auth,
 .paper-card.backup {
   transform: rotate(0.3deg);
   max-height: var(--paper-card-max-height, 85%);
-}
-
-.paper-card.auth {
-  transform: rotate(0.3deg);
-  max-height: none;
-  overflow-y: visible;
 }
 
 .paper-card::before {

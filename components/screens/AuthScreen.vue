@@ -14,7 +14,7 @@
           maxlength="20"
         />
 
-        <text class="input-label" style="margin-top: 15px;">密码:</text>
+        <text class="input-label" style="margin-top: 12px;">密码:</text>
         <input
           class="name-input"
           :value="password"
@@ -26,7 +26,7 @@
 
         <!-- Confirm password for register mode -->
         <template v-if="isRegister">
-          <text class="input-label" style="margin-top: 15px;">确认密码:</text>
+          <text class="input-label" style="margin-top: 12px;">确认密码:</text>
           <input
             class="name-input"
             :value="confirmPassword"
@@ -89,13 +89,15 @@ export default {
   font-size: var(--modal-title-size, 32px);
   font-weight: bold;
   color: #333;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
 }
 
 .card-subtitle {
   font-size: var(--modal-subtitle-size, 14px);
   color: #666;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+  line-height: 1.3;
 }
 
 .auth-form {
@@ -103,36 +105,44 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 10px 0;
+  margin: 8px 0;
 }
 
 .input-label {
   font-size: 14px;
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.input-label[style*="margin-top"] {
+  margin-top: 10px !important;
 }
 
 .name-input {
   width: 80%;
   max-width: 220px;
-  padding: 12px 15px;
+  padding: 10px 12px;
   border: 2px solid #333;
   border-radius: 8px;
   font-size: 16px;
   text-align: center;
   background: #fff;
+  line-height: 1.3;
 }
 
 .auth-error {
   color: #dc2626;
-  font-size: 14px;
-  margin: 10px 0;
+  font-size: 13px;
+  margin: 6px 0;
+  line-height: 1.2;
 }
 
 .auth-success {
   color: #16a34a;
-  font-size: 14px;
-  margin: 10px 0;
+  font-size: 13px;
+  margin: 6px 0;
+  line-height: 1.2;
 }
 
 .card-buttons {
