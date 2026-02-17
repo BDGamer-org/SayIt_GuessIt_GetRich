@@ -41,11 +41,7 @@ export default {
 .paper-card.auth,
 .paper-card.backup {
   transform: rotate(0.3deg);
-}
-
-.paper-card.auth .card-content {
-  padding-top: 25px;
-  padding-bottom: 20px;
+  max-height: var(--paper-card-max-height, 85%);
 }
 
 .paper-card::before {
