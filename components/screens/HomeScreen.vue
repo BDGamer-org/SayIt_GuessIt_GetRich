@@ -1,6 +1,8 @@
 <template>
   <view class="home-screen">
-    <EnergyPill :count="5" @add="$emit('addEnergy')" />
+    <view class="energy-pill-wrapper">
+      <EnergyPill :count="5" @add="$emit('addEnergy')" />
+    </view>
     <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" />
 
     <view class="scroll-area">
@@ -66,6 +68,14 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 0 var(--home-horizontal-padding, 20px);
+  position: relative;
+}
+
+.energy-pill-wrapper {
+  position: absolute;
+  top: 24rpx;
+  left: 24rpx;
+  z-index: 10;
 }
 
 .scroll-area {
@@ -79,9 +89,11 @@ export default {
 }
 
 .slide-handle {
-  width: 34px;
+  width: 68px;
   height: var(--home-card-height, 140px);
   background: transparent;
+  position: relative;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,52 +103,56 @@ export default {
 
 .rounded-chevron {
   position: relative;
-  width: 22px;
-  height: 34px;
+  width: 52px;
+  height: 68px;
 }
 
 .rounded-chevron::before,
 .rounded-chevron::after {
   content: '';
   position: absolute;
-  width: 4px;
-  height: 20px;
-  background: #333;
+  width: 20px;
+  height: 38px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 4px solid #333;
   border-radius: 999px;
 }
 
 .rounded-chevron.left::before {
-  left: 8px;
-  top: -1px;
+  left: 14px;
+  top: 0;
   transform-origin: left center;
-  transform: rotate(45deg);
+  transform: rotate(42deg);
 }
 
 .rounded-chevron.left::after {
-  left: 8px;
-  bottom: -1px;
+  left: 14px;
+  bottom: 0;
   transform-origin: left center;
-  transform: rotate(-45deg);
+  transform: rotate(-48deg);
 }
 
 .rounded-chevron.right::before {
-  right: 8px;
-  top: -1px;
+  right: 14px;
+  top: 0;
   transform-origin: right center;
-  transform: rotate(-45deg);
+  transform: rotate(-42deg);
 }
 
 .rounded-chevron.right::after {
-  right: 8px;
-  bottom: -1px;
+  right: 14px;
+  bottom: 0;
   transform-origin: right center;
-  transform: rotate(45deg);
+  transform: rotate(48deg);
 }
 
 .category-scroll {
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .card-container {
@@ -144,8 +160,8 @@ export default {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 20px;
-  padding: 10px 0;
+  gap: 40px;
+  padding: 10px 28px;
 }
 
 .category-card {
@@ -161,16 +177,16 @@ export default {
   inset: 0;
   box-sizing: border-box;
   transform: translate(-8px, 8px);
-  border-radius: 16px;
   border: 2px solid #333;
+  border-radius: 14px;
   background-color: rgba(200, 200, 200, 0.3);
   background-image: repeating-linear-gradient(
     -60deg,
     rgba(0, 0, 0, 0.35) 0 1.5px,
     transparent 1.5px 8px
   );
-  z-index: 0;
   pointer-events: none;
+  z-index: 0;
 }
 
 .card-sketch {
@@ -178,19 +194,78 @@ export default {
   height: var(--home-card-height, 140px);
   background: #fff;
   border: 3px solid #333;
-  border-radius: 16px;
+  border-radius: 14px;
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   box-shadow: none;
   transform: none;
+}
+
+.card-sketch::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 3px;
+  bottom: 3px;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      #f97316 0 10px,
+      transparent 10px 15px,
+      #f97316 15px 32px,
+      transparent 32px 38px,
+      #f97316 38px 44px,
+      transparent 44px 50px,
+      #f97316 50px 67px,
+      transparent 67px 72px,
+      #f97316 72px 82px,
+      transparent 82px 88px
+    ),
+    repeating-linear-gradient(
+      to right,
+      transparent 0 14px,
+      #f97316 14px 24px,
+      transparent 24px 29px,
+      #f97316 29px 46px,
+      transparent 46px 52px,
+      #f97316 52px 58px,
+      transparent 58px 64px,
+      #f97316 64px 81px,
+      transparent 81px 86px,
+      #f97316 86px 96px,
+      transparent 96px 102px
+    );
+  background-size: 2px 100%, 100% 2px;
+  background-position: left top, left bottom;
+  background-repeat: no-repeat, no-repeat;
+  pointer-events: none;
+}
+
+.card-sketch::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  width: 12px;
+  height: 12px;
+  border-left: 2px solid #f97316;
+  border-bottom: 2px solid #f97316;
+  border-bottom-left-radius: 12px;
+  pointer-events: none;
 }
 
 .card-sketch.dashed {
   border-style: dashed;
   opacity: 0.6;
+}
+
+.card-sketch.dashed::after {
+  display: none;
 }
 
 .category-card.active .card-sketch {
