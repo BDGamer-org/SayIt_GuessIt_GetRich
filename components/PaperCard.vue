@@ -41,7 +41,11 @@ export default {
 .paper-card.auth,
 .paper-card.backup {
   transform: rotate(0.3deg);
-  max-height: var(--paper-card-max-height, 85%);
+}
+
+.paper-card.auth .card-content {
+  padding-top: 25px;
+  padding-bottom: 20px;
 }
 
 .paper-card::before {
@@ -93,7 +97,5 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-height: 70vh;
-  overflow-y: auto;
 }
 </style>
