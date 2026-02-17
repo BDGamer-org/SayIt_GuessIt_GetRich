@@ -1,15 +1,18 @@
 const API_BASE_URL = 'https://sgit-api.bdgamer.org';
 
 export function useGameApi() {
-  // Register new player
-  const register = (playerName, onSuccess, onError) => {
+  // Register new player with username and password
+  const register = (username, password, onSuccess, onError) => {
     uni.request({
       url: `${API_BASE_URL}/api/register`,
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
-      data: { player_name: playerName.trim() },
+      data: {
+        username: username.trim(),
+        password: password
+      },
       success: (res) => {
-        if (res.statusCode === 200) {
+        if (res.statusCode === 200 || res.statusCode === 201) {
           onSuccess(res.data);
         } else {
           onError(res.data.error || '注册失败');
@@ -22,22 +25,25 @@ export function useGameApi() {
     });
   };
 
-  // Recover account by backup code
-  const recover = (backupCode, onSuccess, onError) => {
+  // Login with username and password
+  const login = (username, password, onSuccess, onError) => {
     uni.request({
-      url: `${API_BASE_URL}/api/recover`,
+      url: `${API_BASE_URL}/api/login`,
       method: 'POST',
       header: { 'Content-Type': 'application/json' },
-      data: { backup_code: backupCode.trim().toUpperCase() },
+      data: {
+        username: username.trim(),
+        password: password
+      },
       success: (res) => {
         if (res.statusCode === 200) {
           onSuccess(res.data);
         } else {
-          onError(res.data.error || '无效的备份码');
+          onError(res.data.error || '用户名或密码错误');
         }
       },
       fail: (err) => {
-        console.error('Recover error:', err);
+        console.error('Login error:', err);
         onError('网络错误');
       }
     });
@@ -115,7 +121,7 @@ export function useGameApi() {
 
   return {
     register,
-    recover,
+    login,
     fetchHistory,
     submitScore,
     fetchWordBank

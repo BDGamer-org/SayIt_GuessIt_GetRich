@@ -1,4 +1,4 @@
-// Simplified Worker - No JWT, direct player_id
+// Simplified Worker with Username/Password Auth
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -15,15 +15,46 @@ export default {
     }
 
     try {
-      // Register
+      // Register - Create new player with username and password
       if (path === '/api/register' && request.method === 'POST') {
         const body = await request.json()
-        const playerName = body.player_name?.trim() || 'Player'
+        const username = body.username?.trim()
+        const password = body.password
 
-        // Generate backup code manually
-        const backupCode = Math.random().toString(36).substring(2, 10).toUpperCase()
+        if (!username) {
+          return new Response(JSON.stringify({ error: '用户名不能为空' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
 
-        // Create player
+        if (!password || password.length < 6) {
+          return new Response(JSON.stringify({ error: '密码至少需要6位' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Check if username already exists
+        const checkResponse = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/players?username=eq.${encodeURIComponent(username)}&select=id`,
+          {
+            headers: {
+              'apikey': env.SUPABASE_SERVICE_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            }
+          }
+        )
+
+        const existing = await checkResponse.json()
+        if (existing.length > 0) {
+          return new Response(JSON.stringify({ error: '用户名已被使用' }), {
+            status: 409,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Create player with username as player_name for compatibility
         const response = await fetch(
           `${env.SUPABASE_URL}/rest/v1/players`,
           {
@@ -35,8 +66,9 @@ export default {
               'Prefer': 'return=representation'
             },
             body: JSON.stringify({
-              backup_code: backupCode,
-              player_name: playerName
+              username: username,
+              password_hash: password, // In production, hash this!
+              player_name: username
             })
           }
         )
@@ -54,20 +86,29 @@ export default {
 
         return new Response(JSON.stringify({
           player_id: player.id,
-          backup_code: player.backup_code,
-          player_name: player.player_name
+          player_name: player.player_name || player.username
         }), {
+          status: 201,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
 
-      // Recover
-      if (path === '/api/recover' && request.method === 'POST') {
+      // Login - Authenticate with username and password
+      if (path === '/api/login' && request.method === 'POST') {
         const body = await request.json()
-        const backupCode = body.backup_code?.toUpperCase().trim()
+        const username = body.username?.trim()
+        const password = body.password
 
+        if (!username || !password) {
+          return new Response(JSON.stringify({ error: '请输入用户名和密码' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Find player by username
         const response = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/players?backup_code=eq.${backupCode}&select=*`,
+          `${env.SUPABASE_URL}/rest/v1/players?username=eq.${encodeURIComponent(username)}&select=*`,
           {
             headers: {
               'apikey': env.SUPABASE_SERVICE_KEY,
@@ -79,15 +120,25 @@ export default {
         const players = await response.json()
 
         if (players.length === 0) {
-          return new Response(JSON.stringify({ error: 'Invalid backup code' }), {
-            status: 404,
+          return new Response(JSON.stringify({ error: '用户名或密码错误' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        const player = players[0]
+
+        // Verify password (plain text comparison - in production, use bcrypt)
+        if (player.password_hash !== password) {
+          return new Response(JSON.stringify({ error: '用户名或密码错误' }), {
+            status: 401,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
         }
 
         return new Response(JSON.stringify({
-          player_id: players[0].id,
-          player_name: players[0].player_name
+          player_id: player.id,
+          player_name: player.player_name || player.username
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
@@ -196,7 +247,7 @@ export default {
 
         // Get player name
         const playerRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=player_name`,
+          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=player_name,username`,
           {
             headers: {
               'apikey': env.SUPABASE_SERVICE_KEY,
@@ -206,7 +257,7 @@ export default {
         )
 
         const players = await playerRes.json()
-        const playerName = players[0]?.player_name || 'Player'
+        const playerName = players[0]?.player_name || players[0]?.username || 'Player'
 
         // Insert score
         await fetch(

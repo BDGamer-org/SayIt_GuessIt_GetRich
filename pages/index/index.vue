@@ -4,19 +4,13 @@
     <AuthScreen
       v-if="gameStatus === 'auth'"
       :is-register="authMode === 'register'"
-      v-model:temp-name="tempName"
-      v-model:backup-code-input="backupCodeInput"
+      v-model:username="username"
+      v-model:password="password"
+      v-model:confirm-password="confirmPassword"
       :error="authError"
       :success="authSuccess"
       @submit="handleAuthSubmit"
       @switch="switchAuthMode"
-    />
-
-    <!-- Backup Code Screen -->
-    <BackupScreen
-      v-if="gameStatus === 'backup'"
-      :backup-code="backupCode"
-      @continue="goHome"
     />
 
     <!-- Home Screen -->
@@ -70,7 +64,6 @@
 
 <script>
 import AuthScreen from '@/components/screens/AuthScreen.vue';
-import BackupScreen from '@/components/screens/BackupScreen.vue';
 import HomeScreen from '@/components/screens/HomeScreen.vue';
 import SetupScreen from '@/components/screens/SetupScreen.vue';
 import GameScreen from '@/components/screens/GameScreen.vue';
@@ -85,7 +78,6 @@ const RECENT_WORD_STORAGE_KEY = 'recentWordIds';
 export default {
   components: {
     AuthScreen,
-    BackupScreen,
     HomeScreen,
     SetupScreen,
     GameScreen,
@@ -94,12 +86,12 @@ export default {
   },
 
   setup() {
-    const { register, recover, fetchHistory, submitScore: apiSubmitScore, fetchWordBank } = useGameApi();
+    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchWordBank } = useGameApi();
     const { fetchWords, startMotion, stopMotion, handleTilt } = useGameLogic();
 
     return {
       register,
-      recover,
+      login,
       fetchHistory,
       apiSubmitScore,
       fetchWordBank,
@@ -131,10 +123,10 @@ export default {
       // Auth
       playerId: '',
       playerName: '',
-      backupCode: '',
-      authMode: 'register',
-      tempName: '',
-      backupCodeInput: '',
+      authMode: 'login',
+      username: '',
+      password: '',
+      confirmPassword: '',
       authError: '',
       authSuccess: '',
 
@@ -192,7 +184,6 @@ export default {
       try {
         this.playerId = uni.getStorageSync('playerId') || '';
         this.playerName = uni.getStorageSync('playerName') || '';
-        this.backupCode = uni.getStorageSync('backupCode') || '';
         this.gameStatus = this.playerId ? 'home' : 'auth';
       } catch (e) {
         this.gameStatus = 'auth';
@@ -203,29 +194,41 @@ export default {
       if (this.authMode === 'register') {
         this.handleRegister();
       } else {
-        this.handleRecover();
+        this.handleLogin();
       }
     },
 
     handleRegister() {
-      if (!this.tempName.trim()) {
-        this.authError = '请输入名字';
+      if (!this.username.trim()) {
+        this.authError = '请输入用户名';
+        return;
+      }
+      if (!this.password) {
+        this.authError = '请输入密码';
+        return;
+      }
+      if (this.password !== this.confirmPassword) {
+        this.authError = '两次输入的密码不一致';
+        return;
+      }
+      if (this.password.length < 6) {
+        this.authError = '密码至少需要6位';
         return;
       }
       this.authError = '';
 
       this.register(
-        this.tempName,
+        this.username,
+        this.password,
         (data) => {
           this.playerId = data.player_id;
-          this.playerName = data.player_name;
-          this.backupCode = data.backup_code;
+          this.playerName = data.player_name || this.username;
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
-          uni.setStorageSync('backupCode', this.backupCode);
 
-          this.gameStatus = 'backup';
+          this.authSuccess = '注册成功!';
+          setTimeout(() => this.goHome(), 1000);
         },
         (error) => {
           this.authError = error;
@@ -233,23 +236,28 @@ export default {
       );
     },
 
-    handleRecover() {
-      if (!this.backupCodeInput.trim()) {
-        this.authError = '请输入备份码';
+    handleLogin() {
+      if (!this.username.trim()) {
+        this.authError = '请输入用户名';
+        return;
+      }
+      if (!this.password) {
+        this.authError = '请输入密码';
         return;
       }
       this.authError = '';
 
-      this.recover(
-        this.backupCodeInput,
+      this.login(
+        this.username,
+        this.password,
         (data) => {
           this.playerId = data.player_id;
-          this.playerName = data.player_name;
+          this.playerName = data.player_name || this.username;
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
 
-          this.authSuccess = '恢复成功!';
+          this.authSuccess = '登录成功!';
           setTimeout(() => this.goHome(), 1000);
         },
         (error) => {
@@ -259,9 +267,11 @@ export default {
     },
 
     switchAuthMode() {
-      this.authMode = this.authMode === 'register' ? 'recover' : 'register';
+      this.authMode = this.authMode === 'register' ? 'login' : 'register';
       this.authError = '';
       this.authSuccess = '';
+      this.password = '';
+      this.confirmPassword = '';
     },
 
     // Navigation
@@ -269,8 +279,9 @@ export default {
       this.submitStatus = '';
       this.authSuccess = '';
       this.authError = '';
-      this.tempName = '';
-      this.backupCodeInput = '';
+      this.username = '';
+      this.password = '';
+      this.confirmPassword = '';
       this.gameStatus = 'home';
     },
 

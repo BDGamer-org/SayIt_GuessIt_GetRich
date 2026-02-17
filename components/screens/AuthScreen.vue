@@ -1,21 +1,41 @@
 <template>
   <view class="modal-overlay">
     <PaperCard modifier="auth">
-      <text class="card-main-title">{{ isRegister ? '新玩家' : '恢复账号' }}</text>
-      <text class="card-subtitle">{{ isRegister ? '创建你的游戏档案' : '输入备份码恢复记录' }}</text>
+      <text class="card-main-title">{{ isRegister ? '注册' : '登录' }}</text>
+      <text class="card-subtitle">{{ isRegister ? '创建你的游戏账号' : '欢迎回来' }}</text>
 
-      <!-- Register Mode -->
-      <view v-if="isRegister" class="auth-form">
-        <text class="input-label">你的名字:</text>
-        <input class="name-input" :value="tempName" @input="$emit('update:tempName', $event.detail.value)" placeholder="输入昵称" maxlength="12" />
-        <text class="input-hint">保存好你的备份码，换设备时需要用到</text>
-      </view>
+      <view class="auth-form">
+        <text class="input-label">用户名:</text>
+        <input
+          class="name-input"
+          :value="username"
+          @input="$emit('update:username', $event.detail.value)"
+          placeholder="输入用户名"
+          maxlength="20"
+        />
 
-      <!-- Recover Mode -->
-      <view v-else class="auth-form">
-        <text class="input-label">备份码:</text>
-        <input class="name-input backup-input" :value="backupCodeInput" @input="$emit('update:backupCodeInput', $event.detail.value)" placeholder="如: ABC12345" maxlength="8" />
-        <text class="input-hint">输入之前保存的8位备份码</text>
+        <text class="input-label" style="margin-top: 15px;">密码:</text>
+        <input
+          class="name-input"
+          :value="password"
+          @input="$emit('update:password', $event.detail.value)"
+          placeholder="输入密码"
+          maxlength="32"
+          password
+        />
+
+        <!-- Confirm password for register mode -->
+        <template v-if="isRegister">
+          <text class="input-label" style="margin-top: 15px;">确认密码:</text>
+          <input
+            class="name-input"
+            :value="confirmPassword"
+            @input="$emit('update:confirmPassword', $event.detail.value)"
+            placeholder="再次输入密码"
+            maxlength="32"
+            password
+          />
+        </template>
       </view>
 
       <text v-if="error" class="auth-error">{{ error }}</text>
@@ -23,10 +43,10 @@
 
       <view class="card-buttons">
         <SketchButton type="primary" @click="$emit('submit')">
-          {{ isRegister ? '创建账号' : '恢复记录' }}
+          {{ isRegister ? '注册' : '登录' }}
         </SketchButton>
         <view class="cancel-link" @click="$emit('switch')">
-          {{ isRegister ? '已有备份码? 点击恢复' : '新玩家? 创建账号' }}
+          {{ isRegister ? '已有账号? 点击登录' : '新玩家? 点击注册' }}
         </view>
       </view>
     </PaperCard>
@@ -41,12 +61,13 @@ export default {
   components: { PaperCard, SketchButton },
   props: {
     isRegister: Boolean,
-    tempName: String,
-    backupCodeInput: String,
+    username: String,
+    password: String,
+    confirmPassword: String,
     error: String,
     success: String
   },
-  emits: ['update:tempName', 'update:backupCodeInput', 'submit', 'switch']
+  emits: ['update:username', 'update:password', 'update:confirmPassword', 'submit', 'switch']
 }
 </script>
 
@@ -100,19 +121,6 @@ export default {
   font-size: 16px;
   text-align: center;
   background: #fff;
-}
-
-.backup-input {
-  font-family: monospace;
-  font-size: 18px;
-  letter-spacing: 2px;
-}
-
-.input-hint {
-  font-size: 12px;
-  color: #999;
-  margin-top: 10px;
-  text-align: center;
 }
 
 .auth-error {
