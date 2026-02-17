@@ -3,12 +3,13 @@
     <view class="menu-icon" @click="$emit('history')">📋</view>
     <view class="menu-icon" @click="$emit('sound')">🔊</view>
     <view class="menu-icon" @click="$emit('settings')">⚙️</view>
+    <view class="menu-icon logout" @click="$emit('logout')">🚪</view>
   </view>
 </template>
 
 <script>
 export default {
-  emits: ['history', 'sound', 'settings']
+  emits: ['history', 'sound', 'settings', 'logout']
 }
 </script>
 

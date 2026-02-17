@@ -3,7 +3,7 @@
     <view class="energy-pill-wrapper">
       <EnergyPill :count="5" @add="$emit('addEnergy')" />
     </view>
-    <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" />
+    <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" @logout="$emit('logout')" />
 
     <view class="scroll-area">
       <view class="slide-handle left">
@@ -55,7 +55,7 @@ export default {
       default: 'idiom'
     }
   },
-  emits: ['select', 'showHistory', 'toggleSound', 'openSettings', 'addEnergy']
+  emits: ['select', 'showHistory', 'toggleSound', 'openSettings', 'addEnergy', 'logout']
 }
 </script>
 

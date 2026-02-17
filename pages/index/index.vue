@@ -21,6 +21,7 @@
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
       @open-settings="openSettings"
+      @logout="handleLogout"
     />
 
     <!-- Setup Screen -->
@@ -298,6 +299,35 @@ export default {
 
     openSettings() {
       uni.showToast({ title: '设置', icon: 'none' });
+    },
+
+    handleLogout() {
+      uni.showModal({
+        title: '退出登录',
+        content: '确定要退出登录吗？',
+        success: (res) => {
+          if (res.confirm) {
+            // Clear stored auth data
+            uni.removeStorageSync('playerId');
+            uni.removeStorageSync('playerName');
+
+            // Reset state
+            this.playerId = '';
+            this.playerName = '';
+            this.username = '';
+            this.password = '';
+            this.confirmPassword = '';
+            this.authError = '';
+            this.authSuccess = '';
+            this.authMode = 'login';
+
+            // Return to auth screen
+            this.gameStatus = 'auth';
+
+            uni.showToast({ title: '已退出登录', icon: 'success' });
+          }
+        }
+      });
     },
 
     loadRecentWords() {
