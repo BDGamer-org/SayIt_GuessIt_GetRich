@@ -1,7 +1,7 @@
 <template>
   <view class="home-screen">
     <view class="energy-pill-wrapper">
-      <EnergyPill :count="5" @add="$emit('addEnergy')" />
+      <EnergyPill :count="lives" @add="$emit('addEnergy')" />
     </view>
     <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" @logout="$emit('logout')" />
 
@@ -53,6 +53,10 @@ export default {
     selectedCategory: {
       type: String,
       default: 'idiom'
+    },
+    lives: {
+      type: Number,
+      default: 5
     }
   },
   emits: ['select', 'showHistory', 'toggleSound', 'openSettings', 'addEnergy', 'logout']

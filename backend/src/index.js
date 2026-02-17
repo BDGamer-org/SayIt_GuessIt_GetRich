@@ -72,7 +72,8 @@ export default {
               username: username,
               password_hash: password, // In production, hash this!
               player_name: username,
-              backup_code: dummyBackupCode // For backward compatibility with old schema
+              backup_code: dummyBackupCode, // For backward compatibility with old schema
+              lives: 5
             })
           }
         )
@@ -157,6 +158,86 @@ export default {
           player_id: player.id,
           player_name: player.player_name || player.username
         }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      // Get lives
+      if (path === '/api/lives' && request.method === 'GET') {
+        const playerId = request.headers.get('X-Player-ID')
+
+        if (!playerId) {
+          return new Response(JSON.stringify({ error: 'X-Player-ID header required' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        const response = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=lives`,
+          {
+            headers: {
+              'apikey': env.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+            }
+          }
+        )
+
+        const players = await response.json()
+        const lives = players[0]?.lives ?? 5
+
+        return new Response(JSON.stringify({ lives }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      // Consume life
+      if (path === '/api/lives/consume' && request.method === 'POST') {
+        const playerId = request.headers.get('X-Player-ID')
+
+        if (!playerId) {
+          return new Response(JSON.stringify({ error: 'X-Player-ID header required' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Get current lives
+        const getRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=lives`,
+          {
+            headers: {
+              'apikey': env.SUPABASE_SERVICE_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+            }
+          }
+        )
+
+        const players = await getRes.json()
+        const currentLives = players[0]?.lives ?? 0
+
+        if (currentLives <= 0) {
+          return new Response(JSON.stringify({ error: '没有足够的体力' }), {
+            status: 403,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Decrement lives
+        await fetch(
+          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'apikey': env.SUPABASE_SERVICE_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ lives: currentLives - 1 })
+          }
+        )
+
+        return new Response(JSON.stringify({ lives: currentLives - 1 }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }

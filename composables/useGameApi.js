@@ -92,6 +92,45 @@ export function useGameApi() {
     });
   };
 
+  // Get player lives
+  const fetchLives = (playerId, onSuccess, onError) => {
+    uni.request({
+      url: `${API_BASE_URL}/api/lives`,
+      header: { 'X-Player-ID': playerId },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          onSuccess(res.data.lives);
+        } else {
+          onError('加载失败');
+        }
+      },
+      fail: (err) => {
+        console.error('Fetch lives error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
+  // Consume one life
+  const consumeLife = (playerId, onSuccess, onError) => {
+    uni.request({
+      url: `${API_BASE_URL}/api/lives/consume`,
+      method: 'POST',
+      header: { 'X-Player-ID': playerId },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          onSuccess(res.data.lives);
+        } else {
+          onError(res.data.error || '体力不足');
+        }
+      },
+      fail: (err) => {
+        console.error('Consume life error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
   // Fetch word bank from backend
   const fetchWordBank = (category, options = {}, onSuccess, onError) => {
     const { limit = 320, excludeIds = [] } = options;
@@ -124,6 +163,8 @@ export function useGameApi() {
     login,
     fetchHistory,
     submitScore,
+    fetchLives,
+    consumeLife,
     fetchWordBank
   };
 }

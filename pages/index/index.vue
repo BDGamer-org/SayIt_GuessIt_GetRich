@@ -16,6 +16,7 @@
     <HomeScreen
       v-if="gameStatus === 'home'"
       :selected-category="selectedCategory"
+      :lives="lives"
       @select="selectCategory"
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
@@ -86,7 +87,7 @@ export default {
   },
 
   setup() {
-    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchWordBank } = useGameApi();
+    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchLives, consumeLife, fetchWordBank } = useGameApi();
     const { fetchWords, startMotion, stopMotion, handleTilt } = useGameLogic();
 
     return {
@@ -94,6 +95,8 @@ export default {
       login,
       fetchHistory,
       apiSubmitScore,
+      fetchLives,
+      consumeLife,
       fetchWordBank,
       fetchWords,
       startMotion,
@@ -127,6 +130,9 @@ export default {
       username: '',
       password: '',
       authError: '',
+
+      // Lives
+      lives: 5,
       authSuccess: '',
 
       // History
@@ -183,6 +189,7 @@ export default {
       try {
         this.playerId = uni.getStorageSync('playerId') || '';
         this.playerName = uni.getStorageSync('playerName') || '';
+        this.lives = uni.getStorageSync('lives') || 5;
         this.gameStatus = this.playerId ? 'home' : 'auth';
       } catch (e) {
         this.gameStatus = 'auth';
@@ -218,9 +225,11 @@ export default {
         (data) => {
           this.playerId = data.player_id;
           this.playerName = data.player_name || this.username;
+          this.lives = data.lives || 5;
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
+          uni.setStorageSync('lives', this.lives);
 
           this.authSuccess = '注册成功!';
           setTimeout(() => this.goHome(), 1000);
@@ -251,6 +260,19 @@ export default {
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
+
+          // Fetch lives after login
+          this.fetchLives(
+            this.playerId,
+            (lives) => {
+              this.lives = lives;
+              uni.setStorageSync('lives', lives);
+            },
+            () => {
+              // Fallback to default
+              this.lives = 5;
+            }
+          );
 
           this.authSuccess = '登录成功!';
           setTimeout(() => this.goHome(), 1000);
