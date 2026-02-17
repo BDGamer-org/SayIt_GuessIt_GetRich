@@ -93,5 +93,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 </style>
