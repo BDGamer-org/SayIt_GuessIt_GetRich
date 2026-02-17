@@ -1,8 +1,14 @@
 <template>
   <view class="energy-pill">
-    <text class="icon-flash">⚡</text>
-    <text class="energy-count">{{ count }}</text>
-    <view class="plus-btn" @click="$emit('add')">+</view>
+    <view class="circle-btn left-btn">
+      <image class="icon-img" src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFFFFF' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E"></image>
+    </view>
+    <view class="center-tube">
+      <text class="energy-count">{{ count }}</text>
+    </view>
+    <view class="circle-btn right-btn" @click="$emit('add')">
+      <image class="icon-img" src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolygon fill='%23FFFFFF' stroke='%23000000' stroke-width='2' stroke-linejoin='round' points='9,2 15,2 15,9 22,9 22,15 15,15 15,22 9,22 9,15 2,15 2,9 9,9'/%3E%3C/svg%3E"></image>
+    </view>
   </view>
 </template>
 
@@ -19,43 +25,72 @@ export default {
 </script>
 
 <style scoped>
+@font-face {
+  font-family: 'RoundFont';
+  src: url('https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uP.woff2') format('woff2');
+}
+
 .energy-pill {
-  position: absolute;
-  top: var(--energy-top, 20px);
-  left: var(--energy-left, 40px);
   display: flex;
+  flex-direction: row;
   align-items: center;
-  background: #7dd3fc;
-  border: 2px solid #333;
-  border-radius: 25px;
-  padding: var(--energy-pill-padding-y, 6px) var(--energy-pill-padding-x, 12px);
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
-  z-index: 10;
+  height: 64rpx;
+  position: relative;
 }
 
-.icon-flash {
-  font-size: var(--energy-icon-size, 18px);
-  margin-right: 4px;
-}
-
-.energy-count {
-  font-size: var(--energy-count-size, 20px);
-  font-weight: bold;
-  color: #fff;
-  -webkit-text-stroke: 1px #333;
-  margin-right: 10px;
-}
-
-.plus-btn {
-  width: var(--energy-plus-size, 22px);
-  height: var(--energy-plus-size, 22px);
-  background: #333;
-  color: #fff;
+.circle-btn {
+  width: 44rpx;
+  height: 44rpx;
+  background-color: #77bae6d0;
+  border: 3rpx solid #000000;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  font-weight: bold;
+  z-index: 2;
+  box-shadow: 1rpx 1rpx 0px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+.left-btn {
+  margin-right: -20rpx;
+}
+
+.right-btn {
+  margin-left: -20rpx;
+}
+
+.icon-img {
+  width: 26rpx;
+  height: 26rpx;
+}
+
+.plus-icon {
+  font-size: 36rpx;
+  line-height: 1;
+  color: #FFFFFF;
+  font-weight: 900;
+  -webkit-text-stroke: 3rpx #000000;
+  margin-top: -2rpx;
+}
+
+.center-tube {
+  height: 44rpx;
+  min-width: 60rpx;
+  padding: 0 18rpx;
+  background-color: #FFFFFF;
+  border-top: 3rpx solid #000000;
+  border-bottom: 3rpx solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.energy-count {
+  font-family: 'RoundFont', 'PingFang SC', sans-serif;
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 900;
 }
 </style>
