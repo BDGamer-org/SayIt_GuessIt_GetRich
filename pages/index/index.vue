@@ -557,8 +557,8 @@ export default {
   --energy-icon-size: 18px;
   --energy-count-size: 20px;
   --energy-plus-size: 22px;
-  --menu-right: 20px;
-  --menu-bottom: 20px;
+  --menu-right: 36px;
+  --menu-bottom: 60px;
   --menu-gap: 12px;
   --menu-icon-size: 44px;
   --menu-icon-font-size: 20px;
@@ -607,8 +607,8 @@ export default {
   --energy-icon-size: 16px;
   --energy-count-size: 18px;
   --energy-plus-size: 20px;
-  --menu-right: 14px;
-  --menu-bottom: 14px;
+  --menu-right: 28px;
+  --menu-bottom: 50px;
   --menu-gap: 10px;
   --menu-icon-size: 40px;
   --menu-icon-font-size: 18px;
