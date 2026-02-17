@@ -54,6 +54,9 @@ export default {
           })
         }
 
+        // Generate a dummy backup_code for backward compatibility
+        const dummyBackupCode = Math.random().toString(36).substring(2, 10).toUpperCase()
+
         // Create player with username as player_name for compatibility
         const response = await fetch(
           `${env.SUPABASE_URL}/rest/v1/players`,
@@ -68,14 +71,28 @@ export default {
             body: JSON.stringify({
               username: username,
               password_hash: password, // In production, hash this!
-              player_name: username
+              player_name: username,
+              backup_code: dummyBackupCode // For backward compatibility with old schema
             })
           }
         )
 
         if (!response.ok) {
-          const error = await response.text()
-          return new Response(JSON.stringify({ error }), {
+          let errorMessage = '注册失败，请稍后重试'
+          try {
+            const errorData = await response.json()
+            // Check for specific database errors
+            if (errorData.message?.includes('username')) {
+              errorMessage = '用户名已被使用'
+            } else if (errorData.message?.includes('null value')) {
+              errorMessage = '系统错误：数据库配置不完整'
+            } else {
+              errorMessage = errorData.message || errorMessage
+            }
+          } catch (e) {
+            // Use default error message
+          }
+          return new Response(JSON.stringify({ error: errorMessage }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
