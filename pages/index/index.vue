@@ -435,6 +435,18 @@ export default {
     // Game
     async startGame(time) {
       if (this.startingGame) return;
+
+      // Check if player has lives
+      if (this.lives <= 0) {
+        uni.showModal({
+          title: '体力不足',
+          content: '您的体力已用完，请稍后再试',
+          showCancel: false,
+          confirmText: '确定'
+        });
+        return;
+      }
+
       this.startingGame = true;
 
       this.lastTime = time;
@@ -493,6 +505,21 @@ export default {
 
     endGame() {
       this.stopAll();
+
+      // Consume one life
+      if (this.playerId && this.lives > 0) {
+        this.consumeLife(
+          this.playerId,
+          (remainingLives) => {
+            this.lives = remainingLives;
+            uni.setStorageSync('lives', remainingLives);
+          },
+          (error) => {
+            console.error('Failed to consume life:', error);
+          }
+        );
+      }
+
       this.$nextTick(() => {
         this.gameStatus = 'result';
       });
