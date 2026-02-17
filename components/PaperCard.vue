@@ -45,8 +45,8 @@ export default {
 
 .paper-card.auth {
   transform: rotate(0.3deg);
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .paper-card::before {

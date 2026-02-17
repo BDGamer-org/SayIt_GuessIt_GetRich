@@ -95,7 +95,7 @@ export default {
 .card-subtitle {
   font-size: var(--modal-subtitle-size, 14px);
   color: #666;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
 }
 
 .auth-form {
@@ -103,7 +103,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 15px 0;
+  margin: 10px 0;
 }
 
 .input-label {
@@ -139,8 +139,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-top: 15px;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 5px;
 }
 
 .cancel-link {
