@@ -6,7 +6,6 @@
       :is-register="authMode === 'register'"
       v-model:username="username"
       v-model:password="password"
-      v-model:confirm-password="confirmPassword"
       :error="authError"
       :success="authSuccess"
       @submit="handleAuthSubmit"
@@ -127,7 +126,6 @@ export default {
       authMode: 'login',
       username: '',
       password: '',
-      confirmPassword: '',
       authError: '',
       authSuccess: '',
 
@@ -208,10 +206,6 @@ export default {
         this.authError = '请输入密码';
         return;
       }
-      if (this.password !== this.confirmPassword) {
-        this.authError = '两次输入的密码不一致';
-        return;
-      }
       if (this.password.length < 6) {
         this.authError = '密码至少需要6位';
         return;
@@ -272,7 +266,6 @@ export default {
       this.authError = '';
       this.authSuccess = '';
       this.password = '';
-      this.confirmPassword = '';
     },
 
     // Navigation
@@ -282,7 +275,6 @@ export default {
       this.authError = '';
       this.username = '';
       this.password = '';
-      this.confirmPassword = '';
       this.gameStatus = 'home';
     },
 
@@ -316,7 +308,6 @@ export default {
             this.playerName = '';
             this.username = '';
             this.password = '';
-            this.confirmPassword = '';
             this.authError = '';
             this.authSuccess = '';
             this.authMode = 'login';

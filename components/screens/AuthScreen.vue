@@ -23,19 +23,6 @@
           maxlength="32"
           password
         />
-
-        <!-- Confirm password for register mode -->
-        <template v-if="isRegister">
-          <text class="input-label" style="margin-top: 10px;">确认密码:</text>
-          <input
-            class="name-input"
-            :value="confirmPassword"
-            @input="$emit('update:confirmPassword', $event.detail.value)"
-            placeholder="再次输入密码"
-            maxlength="32"
-            password
-          />
-        </template>
       </view>
 
       <text v-if="error" class="auth-error">{{ error }}</text>
@@ -63,11 +50,10 @@ export default {
     isRegister: Boolean,
     username: String,
     password: String,
-    confirmPassword: String,
     error: String,
     success: String
   },
-  emits: ['update:username', 'update:password', 'update:confirmPassword', 'submit', 'switch']
+  emits: ['update:username', 'update:password', 'submit', 'switch']
 }
 </script>
 
