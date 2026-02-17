@@ -14,7 +14,7 @@
           maxlength="20"
         />
 
-        <text class="input-label" style="margin-top: 15px;">密码:</text>
+        <text class="input-label" style="margin-top: 10px;">密码:</text>
         <input
           class="name-input"
           :value="password"
@@ -26,7 +26,7 @@
 
         <!-- Confirm password for register mode -->
         <template v-if="isRegister">
-          <text class="input-label" style="margin-top: 15px;">确认密码:</text>
+          <text class="input-label" style="margin-top: 10px;">确认密码:</text>
           <input
             class="name-input"
             :value="confirmPassword"
@@ -95,7 +95,7 @@ export default {
 .card-subtitle {
   font-size: var(--modal-subtitle-size, 14px);
   color: #666;
-  margin-bottom: 25px;
+  margin-bottom: 12px;
 }
 
 .auth-form {
@@ -103,13 +103,13 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 15px 0;
+  margin: 8px 0;
 }
 
 .input-label {
   font-size: 14px;
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .name-input {
@@ -125,22 +125,22 @@ export default {
 
 .auth-error {
   color: #dc2626;
-  font-size: 14px;
-  margin: 10px 0;
+  font-size: 13px;
+  margin: 6px 0;
 }
 
 .auth-success {
   color: #16a34a;
-  font-size: 14px;
-  margin: 10px 0;
+  font-size: 13px;
+  margin: 6px 0;
 }
 
 .card-buttons {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  margin-top: 15px;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .cancel-link {
