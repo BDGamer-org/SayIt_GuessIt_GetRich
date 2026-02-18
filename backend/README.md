@@ -12,29 +12,6 @@ Cloudflare Worker backend for the SayIt GuessIt GetRich game.
 | POST | `/api/score` | Submit a score (requires X-Player-ID header) |
 | GET | `/api/words` | Get random word bank |
 
-## Setup
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Set up secrets:
-```bash
-wrangler secret put SUPABASE_URL
-wrangler secret put SUPABASE_SERVICE_KEY
-wrangler secret put SUPABASE_ANON_KEY
-```
-
-3. Run locally:
-```bash
-npm run dev
-```
-
-4. Deploy:
-```bash
-npm run deploy
-```
 
 ## Database Schema
 
