@@ -2,7 +2,7 @@
   <view class="modal-overlay">
     <view class="setup-container">
       <!-- Background image -->
-      <image class="bg-image" src="/static/Setupscreen_2.png" mode="widthFix" />
+      <image class="bg-image" :src="bgImage" mode="widthFix" />
 
       <!-- Overlay content positioned on top of the background -->
       <view class="overlay-content">
@@ -42,7 +42,14 @@ export default {
       default: '成语'
     }
   },
-  emits: ['update:selectedTime', 'start', 'cancel']
+  emits: ['update:selectedTime', 'start', 'cancel'],
+  computed: {
+    bgImage() {
+      return this.categoryLabel === '日常生活'
+        ? '/static/Setuplife.png'
+        : '/static/Setupscreen_2.png';
+    }
+  }
 }
 </script>
 
