@@ -1,11 +1,13 @@
 <template>
   <view class="modal-overlay">
-    <PaperCard>
-      <text class="card-main-title">{{ categoryLabel }}</text>
-      <text class="card-subtitle">一人答题 · 一人描述</text>
+    <view class="setup-container">
+      <!-- Background image -->
+      <image class="bg-image" src="/static/Setupscreen_2.png" mode="widthFix" />
 
-      <view class="time-section">
-        <text class="time-label">选择游戏时间</text>
+      <!-- Overlay content positioned on top of the background -->
+      <view class="overlay-content">
+        <!-- "请选择游戏时间" text + time options -->
+        <text class="time-label">请选择游戏时间</text>
         <view class="time-options">
           <view class="time-item" :class="{active: selectedTime===60}" @click="$emit('update:selectedTime', 60)">
             <view class="checkbox">{{ selectedTime===60 ? '☑' : '☐' }}</view>
@@ -20,22 +22,19 @@
             <text>180s</text>
           </view>
         </view>
-      </view>
 
-      <view class="card-buttons">
-        <SketchButton type="primary" @click="$emit('start')">开始游戏</SketchButton>
-        <view class="cancel-link" @click="$emit('cancel')">Cancel</view>
+        <!-- Buttons -->
+        <view class="card-buttons">
+          <view class="btn btn-start" @click="$emit('start')">开始游戏</view>
+          <view class="btn btn-cancel" @click="$emit('cancel')">取消</view>
+        </view>
       </view>
-    </PaperCard>
+    </view>
   </view>
 </template>
 
 <script>
-import PaperCard from '../PaperCard.vue';
-import SketchButton from '../SketchButton.vue';
-
 export default {
-  components: { PaperCard, SketchButton },
   props: {
     selectedTime: Number,
     categoryLabel: {
@@ -54,43 +53,47 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(248, 246, 240, 0.85);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 50;
 }
 
-.card-main-title {
-  font-size: var(--modal-title-size, 32px);
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.card-subtitle {
-  font-size: var(--modal-subtitle-size, 14px);
-  color: #666;
-  margin-bottom: 25px;
-}
-
-.time-section {
+.setup-container {
   width: 100%;
-  margin-bottom: 25px;
+  height: 100%;
+  position: relative;
+}
+
+.bg-image {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 5%;
+}
+
+/* ======== Overlay content: positioned over the paper area ======== */
+.overlay-content {
+  position: absolute;
+  top: 32%;
+  left: 20%;
+  right: 17%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .time-label {
-  display: block;
-  text-align: center;
   font-size: 14px;
   color: #666;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .time-options {
   display: flex;
   justify-content: center;
   gap: 25px;
+  margin-bottom: 30px;
 }
 
 .time-item {
@@ -110,17 +113,32 @@ export default {
   font-size: 18px;
 }
 
+/* ======== Buttons ======== */
 .card-buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 12px;
-  margin-top: 15px;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
 }
 
-.cancel-link {
-  color: #999;
-  font-size: 14px;
-  text-decoration: underline;
+.btn {
+  padding: var(--sketch-btn-pad-y, 12px) var(--sketch-btn-pad-x, 28px);
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: var(--sketch-btn-font-size, 16px);
+  font-weight: bold;
+  color: #333;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.btn-start {
+  background: #77bae6d0;
+}
+
+.btn-cancel {
+  background: #fef3c7;
 }
 </style>
