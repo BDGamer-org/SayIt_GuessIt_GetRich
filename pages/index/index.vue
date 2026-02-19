@@ -33,6 +33,12 @@
       @cancel="gameStatus = 'home'"
     />
 
+    <!-- Countdown Screen -->
+    <CountdownScreen
+      v-if="gameStatus === 'countdown'"
+      @done="onCountdownDone"
+    />
+
     <!-- Game Screen -->
     <GameScreen
       v-if="gameStatus === 'playing'"
@@ -67,6 +73,7 @@ import HomeScreen from '@/components/screens/HomeScreen.vue';
 import SetupScreen from '@/components/screens/SetupScreen.vue';
 import GameScreen from '@/components/screens/GameScreen.vue';
 import ResultScreen from '@/components/screens/ResultScreen.vue';
+import CountdownScreen from '@/components/screens/CountdownScreen.vue';
 import HistoryScreen from '@/components/screens/HistoryScreen.vue';
 import { useGameApi } from '@/composables/useGameApi.js';
 import { useGameLogic } from '@/composables/useGameLogic.js';
@@ -81,6 +88,7 @@ export default {
     SetupScreen,
     GameScreen,
     ResultScreen,
+    CountdownScreen,
     HistoryScreen
   },
 
@@ -460,27 +468,27 @@ export default {
           return;
         }
 
-        const categoryName = this.selectedCategory === 'life' ? '日常生活' : '中华成语';
-        const sourceName = this.currentWordSource === 'cloud' ? '云端' : '本地';
-        uni.showToast({ title: `${sourceName}词库 · ${categoryName}`, icon: 'none' });
-
-        this.gameStatus = 'playing';
-        this.nextWord();
-        this.startTimer();
-
-        this.startMotion((res) => {
-          if (this.gameStatus !== 'playing') return;
-          this.handleTilt(
-            res,
-            this.isLocked,
-            () => this.triggerResult(true),
-            () => this.triggerResult(false),
-            () => { this.isLocked = false; }
-          );
-        });
+        this.gameStatus = 'countdown';
       } finally {
         this.startingGame = false;
       }
+    },
+
+    onCountdownDone() {
+      this.gameStatus = 'playing';
+      this.nextWord();
+      this.startTimer();
+
+      this.startMotion((res) => {
+        if (this.gameStatus !== 'playing') return;
+        this.handleTilt(
+          res,
+          this.isLocked,
+          () => this.triggerResult(true),
+          () => this.triggerResult(false),
+          () => { this.isLocked = false; }
+        );
+      });
     },
 
     quitGame() {
