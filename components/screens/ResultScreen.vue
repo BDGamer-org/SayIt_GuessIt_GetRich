@@ -1,35 +1,31 @@
 <template>
   <view class="modal-overlay">
-    <PaperCard modifier="result">
-      <text class="card-main-title">结算</text>
+    <view class="result-container">
+      <!-- Background image -->
+      <image class="bg-image" src="/static/result.png" mode="widthFix" />
 
-      <view class="result-section">
-        <text class="result-label">答对总数:</text>
-        <text class="result-value">{{ score }}</text>
+      <!-- Overlay content -->
+      <view class="overlay-content">
+        <view class="result-section">
+          <text class="result-label">答对总数:</text>
+          <text class="result-value">{{ score }}</text>
+        </view>
+
+        <view class="result-buttons">
+          <view class="btn btn-restart" @click="$emit('restart')">再来一局</view>
+          <view class="btn btn-home" @click="$emit('home')">退出</view>
+        </view>
       </view>
-
-      <text v-if="submitStatus" class="submit-status">{{ submitStatus }}</text>
-
-      <view class="result-buttons">
-        <SketchButton @click="$emit('restart')">再来一局</SketchButton>
-        <SketchButton type="secondary" @click="$emit('home')">退出</SketchButton>
-        <SketchButton type="primary" @click="$emit('submit')">上传分数</SketchButton>
-      </view>
-    </PaperCard>
+    </view>
   </view>
 </template>
 
 <script>
-import PaperCard from '../PaperCard.vue';
-import SketchButton from '../SketchButton.vue';
-
 export default {
-  components: { PaperCard, SketchButton },
   props: {
-    score: Number,
-    submitStatus: String
+    score: Number
   },
-  emits: ['restart', 'home', 'submit']
+  emits: ['restart', 'home']
 }
 </script>
 
@@ -40,22 +36,38 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(248, 246, 240, 0.85);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 50;
 }
 
-.card-main-title {
-  font-size: var(--modal-title-size, 32px);
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8px;
+.result-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.bg-image {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 8%;
+}
+
+/* ======== Overlay content ======== */
+.overlay-content {
+  position: absolute;
+  top: 30%;
+  left: 20%;
+  right: 15%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .result-section {
-  margin: 15px 0;
+  margin-bottom: 15px;
   text-align: center;
 }
 
@@ -73,17 +85,32 @@ export default {
   line-height: 1;
 }
 
-.submit-status {
-  font-size: 14px;
-  color: #666;
-  margin: 10px 0;
-}
-
+/* ======== Buttons ======== */
 .result-buttons {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin-top: 15px;
 }
+
+.btn {
+  padding: 10px 24px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #333;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.btn-restart {
+  background: #77bae6d0;
+}
+
+.btn-home {
+  background: #fef3c7;
+}
+
 </style>
