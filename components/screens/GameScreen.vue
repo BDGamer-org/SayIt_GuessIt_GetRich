@@ -12,6 +12,7 @@
     </view>
 
     <view class="word-card">
+      <image class="word-card-bg" src="/static/contentbg.png" mode="widthFix" />
       <text class="word-text">{{ currentWord }}</text>
     </view>
 
@@ -71,24 +72,28 @@ export default {
 }
 
 .word-card {
-  width: 80%;
-  max-width: 500px;
-  min-height: var(--game-word-min-height, 200px);
-  background: #fff;
-  border: 3px solid #333;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
-  transform: rotate(-0.5deg);
+  width: 100%;
+  max-width: none;
+  position: relative;
+  background: transparent;
+  margin-top: -30px;
+}
+
+.word-card-bg {
+  width: 100%;
+  display: block;
 }
 
 .word-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: var(--game-word-font-size, 56px);
   font-weight: bold;
   color: #333;
   letter-spacing: var(--game-word-letter-spacing, 8px);
+  z-index: 1;
 }
 
 .quit-btn {
