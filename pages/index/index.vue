@@ -46,18 +46,16 @@
     <ResultScreen
       v-if="gameStatus === 'result'"
       :score="score"
-      :submit-status="submitStatus"
       @restart="restartGame"
       @home="goHome"
-      @submit="submitScore"
     />
 
     <!-- History Screen -->
     <HistoryScreen
       v-if="gameStatus === 'history'"
       :history="userHistory"
-      :loading="loading"
-      @refresh="refreshHistory"
+      :selected-category="historyCategory"
+      @switch-category="switchHistoryCategory"
       @close="gameStatus = 'home'"
     />
   </view>
@@ -137,8 +135,7 @@ export default {
 
       // History
       userHistory: [],
-      loading: false,
-      submitStatus: ''
+      historyCategory: 'idiom'
     };
   },
 
@@ -292,7 +289,6 @@ export default {
 
     // Navigation
     goHome() {
-      this.submitStatus = '';
       this.authSuccess = '';
       this.authError = '';
       this.username = '';
@@ -452,7 +448,6 @@ export default {
       this.lastTime = time;
       this.timeLeft = time;
       this.score = 0;
-      this.submitStatus = '';
       this.isLocked = false;
       this.currentWordId = null;
       this.currentWordSource = '';
@@ -494,7 +489,6 @@ export default {
     },
 
     restartGame() {
-      this.submitStatus = '';
       this.startGame(this.lastTime);
     },
 
@@ -519,6 +513,9 @@ export default {
           }
         );
       }
+
+      // Save game record locally
+      this.saveGameRecord(this.selectedCategory, this.score);
 
       this.$nextTick(() => {
         this.gameStatus = 'result';
@@ -562,55 +559,44 @@ export default {
       }, 800);
     },
 
-    // API
-    submitScore() {
-      if (!this.playerId) {
-        this.submitStatus = '请先登录';
-        return;
+    // Local History
+    saveGameRecord(category, score) {
+      const key = `gameHistory_${category}`;
+      let records = [];
+      try {
+        const saved = uni.getStorageSync(key);
+        if (Array.isArray(saved)) records = saved;
+      } catch (e) {
+        records = [];
       }
-
-      this.submitStatus = '上传中...';
-
-      this.apiSubmitScore(
-        this.playerId,
-        this.score,
-        () => {
-          this.submitStatus = '上传成功!';
-          setTimeout(() => this.showUserHistory(), 1000);
-        },
-        (error) => {
-          this.submitStatus = error;
-        }
-      );
+      records.unshift({
+        score,
+        category,
+        date: new Date().toISOString()
+      });
+      if (records.length > 10) records = records.slice(0, 10);
+      uni.setStorageSync(key, records);
     },
 
-    fetchUserHistory() {
-      if (!this.playerId) {
-        this.userHistory = [];
-        return;
+    loadGameHistory(category) {
+      const key = `gameHistory_${category}`;
+      try {
+        const saved = uni.getStorageSync(key);
+        return Array.isArray(saved) ? saved : [];
+      } catch (e) {
+        return [];
       }
-
-      this.loading = true;
-      this.fetchHistory(
-        this.playerId,
-        (data) => {
-          this.userHistory = data;
-          this.loading = false;
-        },
-        (error) => {
-          uni.showToast({ title: error, icon: 'none' });
-          this.loading = false;
-        }
-      );
     },
 
     showUserHistory() {
+      this.historyCategory = 'idiom';
+      this.userHistory = this.loadGameHistory('idiom');
       this.gameStatus = 'history';
-      this.fetchUserHistory();
     },
 
-    refreshHistory() {
-      this.fetchUserHistory();
+    switchHistoryCategory(category) {
+      this.historyCategory = category;
+      this.userHistory = this.loadGameHistory(category);
     }
   }
 };
