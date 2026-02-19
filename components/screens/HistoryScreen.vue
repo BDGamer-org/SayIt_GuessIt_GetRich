@@ -1,15 +1,29 @@
 <template>
   <view class="modal-overlay">
-    <PaperCard modifier="history">
-      <text class="card-main-title">我的记录</text>
-      <text class="card-subtitle">最近 10 场游戏</text>
+    <view class="history-container">
+      <text class="main-title">我的记录</text>
 
-      <view v-if="loading" class="loading-text">加载中...</view>
+      <!-- Category Tabs -->
+      <view class="category-tabs">
+        <view
+          class="tab"
+          :class="{ active: selectedCategory === 'idiom' }"
+          @click="$emit('switchCategory', 'idiom')"
+        >中华成语</view>
+        <view
+          class="tab"
+          :class="{ active: selectedCategory === 'life' }"
+          @click="$emit('switchCategory', 'life')"
+        >日常生活</view>
+      </view>
 
-      <scroll-view v-else class="history-list" scroll-y="true">
-        <view v-for="(item, index) in history" :key="item.id" class="history-item">
+      <text class="subtitle">最近 10 场游戏</text>
+
+      <!-- History List -->
+      <scroll-view class="history-list" scroll-y="true">
+        <view v-for="(item, index) in history" :key="index" class="history-item">
           <text class="history-num">{{ index + 1 }}</text>
-          <text class="history-date">{{ formatDate(item.created_at) }}</text>
+          <text class="history-date">{{ formatDate(item.date) }}</text>
           <text class="history-score">{{ item.score }}分</text>
         </view>
         <view v-if="history.length === 0" class="empty-text">
@@ -17,25 +31,24 @@
         </view>
       </scroll-view>
 
-      <view class="card-buttons">
-        <SketchButton @click="$emit('refresh')">刷新</SketchButton>
-        <view class="cancel-link" @click="$emit('close')">关闭</view>
-      </view>
-    </PaperCard>
+      <view class="close-btn" @click="$emit('close')">关闭</view>
+    </view>
   </view>
 </template>
 
 <script>
-import PaperCard from '../PaperCard.vue';
-import SketchButton from '../SketchButton.vue';
-
 export default {
-  components: { PaperCard, SketchButton },
   props: {
-    history: Array,
-    loading: Boolean
+    history: {
+      type: Array,
+      default: () => []
+    },
+    selectedCategory: {
+      type: String,
+      default: 'idiom'
+    }
   },
-  emits: ['refresh', 'close'],
+  emits: ['switchCategory', 'close'],
   methods: {
     formatDate(dateString) {
       const date = new Date(dateString);
@@ -56,36 +69,78 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(248, 246, 240, 0.85);
+  background: rgba(248, 246, 240, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
 }
 
-.card-main-title {
-  font-size: var(--modal-title-size, 32px);
+.history-container {
+  width: 85%;
+  max-width: 480px;
+  background: #fffdf8;
+  border: 3px solid #333;
+  border-radius: 16px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.08);
+}
+
+.main-title {
+  font-size: 28px;
   font-weight: bold;
   color: #333;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
-.card-subtitle {
-  font-size: var(--modal-subtitle-size, 14px);
+/* Category Tabs */
+.category-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 10px;
+  border: 2px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: bold;
   color: #666;
-  margin-bottom: 25px;
+  background: #fff;
+  border-right: 2px solid #333;
 }
 
+.tab:last-child {
+  border-right: none;
+}
+
+.tab.active {
+  background: #f97316;
+  color: #fff;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 10px;
+}
+
+/* History List */
 .history-list {
   width: 100%;
-  max-height: var(--history-max-height, 280px);
-  margin: 15px 0;
+  max-height: var(--history-max-height, 260px);
+  margin: 8px 0;
 }
 
 .history-item {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
+  padding: 10px 12px;
   border-bottom: 1px dashed rgba(0,0,0,0.1);
 }
 
@@ -94,10 +149,10 @@ export default {
 }
 
 .history-num {
-  width: 30px;
-  font-size: 16px;
+  width: 28px;
+  font-size: 15px;
   font-weight: bold;
-  color: #666;
+  color: #999;
 }
 
 .history-date {
@@ -108,30 +163,22 @@ export default {
 }
 
 .history-score {
-  width: 60px;
-  font-size: 18px;
+  width: 56px;
+  font-size: 17px;
   font-weight: bold;
   color: #333;
   text-align: right;
 }
 
-.loading-text,
 .empty-text {
-  font-size: 16px;
-  color: #999;
+  font-size: 15px;
+  color: #bbb;
   padding: 30px;
   text-align: center;
 }
 
-.card-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 15px;
-}
-
-.cancel-link {
+.close-btn {
+  margin-top: 14px;
   color: #999;
   font-size: 14px;
   text-decoration: underline;
