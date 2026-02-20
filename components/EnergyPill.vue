@@ -34,13 +34,13 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 64rpx;
+  height: 48rpx;
   position: relative;
 }
 
 .circle-btn {
-  width: 44rpx;
-  height: 44rpx;
+  width: 34rpx;
+  height: 34rpx;
   background-color: #77bae6d0;
   border: 3rpx solid #000000;
   border-radius: 50%;
@@ -61,8 +61,8 @@ export default {
 }
 
 .icon-img {
-  width: 26rpx;
-  height: 26rpx;
+  width: 20rpx;
+  height: 20rpx;
 }
 
 .plus-icon {
@@ -75,9 +75,9 @@ export default {
 }
 
 .center-tube {
-  height: 44rpx;
-  min-width: 60rpx;
-  padding: 0 18rpx;
+  height: 34rpx;
+  min-width: 56rpx;
+  padding: 0 16rpx;
   background-color: #FFFFFF;
   border-top: 3rpx solid #000000;
   border-bottom: 3rpx solid #000000;
@@ -89,7 +89,7 @@ export default {
 
 .energy-count {
   font-family: 'RoundFont', 'PingFang SC', sans-serif;
-  font-size: 30rpx;
+  font-size: 22rpx;
   color: #333;
   font-weight: 900;
 }
