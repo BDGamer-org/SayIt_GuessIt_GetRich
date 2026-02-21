@@ -1,9 +1,10 @@
 <template>
   <view class="home-screen">
+    <image class="bg-image" src="/static/button.png" mode="widthFix" />
     <view class="energy-pill-wrapper">
       <EnergyPill :count="lives" @add="$emit('addEnergy')" />
     </view>
-    <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @settings="$emit('openSettings')" @logout="$emit('logout')" />
+    <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @logout="$emit('logout')" />
 
     <view class="scroll-area">
       <view class="slide-handle left">
@@ -59,7 +60,7 @@ export default {
       default: 5
     }
   },
-  emits: ['select', 'showHistory', 'toggleSound', 'openSettings', 'addEnergy', 'logout']
+  emits: ['select', 'showHistory', 'toggleSound', 'addEnergy', 'logout']
 }
 </script>
 
@@ -73,6 +74,15 @@ export default {
   justify-content: center;
   padding: 0 var(--home-horizontal-padding, 20px);
   position: relative;
+}
+
+.bg-image {
+  position: absolute;
+  bottom: 10px;
+  right: -7%;
+  width: 75%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .energy-pill-wrapper {
