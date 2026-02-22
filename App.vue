@@ -14,15 +14,20 @@
 
 <style>
 @font-face {
-	font-family: 'Long Cang';
-	src: url('/static/fonts/LongCang-Regular.ttf') format('truetype');
+	font-family: 'ZhiMangXing';
+	src: url('/static/fonts/ZhiMangXing-Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'ZhengQingKe';
+	src: url('/static/fonts/ZhengQingKeNanBei.ttf') format('truetype');
 }
 
 page {
-	font-family: 'Long Cang', 'PingFang SC', sans-serif;
+	font-family: 'ZhengQingKe', 'PingFang SC', sans-serif;
 }
 
 view, text, button, input, textarea {
-	font-family: 'Long Cang', 'PingFang SC', sans-serif;
+	font-family: 'ZhengQingKe', 'PingFang SC', sans-serif;
 }
 </style>

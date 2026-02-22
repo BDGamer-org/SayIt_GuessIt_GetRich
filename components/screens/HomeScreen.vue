@@ -288,7 +288,7 @@ export default {
 }
 
 .card-title {
-  font-family: 'Long Cang', 'Rubik', 'PingFang SC', sans-serif;
+  font-family: 'ZhiMangXing', 'PingFang SC', sans-serif;
   font-size: var(--home-card-title-size, 48px);
   font-weight: bold;
   color: #333;
