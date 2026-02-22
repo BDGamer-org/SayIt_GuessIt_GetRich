@@ -72,6 +72,7 @@ export default {
 }
 
 .card-main-title {
+  font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
   font-size: var(--modal-title-size, 32px);
   font-weight: bold;
   color: #333;

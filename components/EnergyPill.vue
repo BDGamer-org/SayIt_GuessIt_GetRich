@@ -83,7 +83,7 @@ export default {
 }
 
 .energy-count {
-  font-family: 'ZhengQingKe', 'PingFang SC', sans-serif;
+  font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
   font-size: 22rpx;
   color: #333;
   font-weight: 900;
