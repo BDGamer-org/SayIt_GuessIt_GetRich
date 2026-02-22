@@ -90,6 +90,7 @@ export default {
 }
 
 .main-title {
+  font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
   font-size: 28px;
   font-weight: bold;
   color: #333;
