@@ -25,11 +25,6 @@ export default {
 </script>
 
 <style scoped>
-@font-face {
-  font-family: 'RoundFont';
-  src: url('https://fonts.gstatic.com/s/varelaround/v20/w8gdH283Tvk__Lua32TysjIfp8uP.woff2') format('woff2');
-}
-
 .energy-pill {
   display: flex;
   flex-direction: row;
@@ -88,7 +83,7 @@ export default {
 }
 
 .energy-count {
-  font-family: 'RoundFont', 'PingFang SC', sans-serif;
+  font-family: 'Long Cang', 'Rubik', 'PingFang SC', sans-serif;
   font-size: 22rpx;
   color: #333;
   font-weight: 900;

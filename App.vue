@@ -13,5 +13,16 @@
 </script>
 
 <style>
-	/*每个页面公共css */
+@font-face {
+	font-family: 'Long Cang';
+	src: url('/static/fonts/LongCang-Regular.ttf') format('truetype');
+}
+
+page {
+	font-family: 'Long Cang', 'PingFang SC', sans-serif;
+}
+
+view, text, button, input, textarea {
+	font-family: 'Long Cang', 'PingFang SC', sans-serif;
+}
 </style>
