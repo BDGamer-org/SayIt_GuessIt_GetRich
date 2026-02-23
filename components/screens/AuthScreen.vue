@@ -1,7 +1,7 @@
 <template>
   <view class="auth-bg">
     <image class="auth-bg-img" src="/static/getstart.png" mode="aspectFill" />
-    <PaperCard modifier="auth">
+    <view class="auth-content">
       <text class="card-main-title">{{ isRegister ? '注册' : '登录' }}</text>
 
       <view class="auth-form">
@@ -38,16 +38,15 @@
           </text>
         </view>
       </view>
-    </PaperCard>
+    </view>
   </view>
 </template>
 
 <script>
-import PaperCard from '../PaperCard.vue';
 import SketchButton from '../SketchButton.vue';
 
 export default {
-  components: { PaperCard, SketchButton },
+  components: { SketchButton },
   props: {
     isRegister: Boolean,
     username: String,
@@ -79,8 +78,22 @@ export default {
 
 .auth-bg-img {
   position: absolute;
-  width: 70%;
-  height: 70%;
+  width: 120%;
+  height: 100%;
+  top: 3%;
+  left: -6%;
+  z-index: 0;
+}
+
+.auth-content {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 85%);
+  padding: 40px 30px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
 }
 
 .card-main-title {
@@ -136,13 +149,20 @@ export default {
 }
 
 .button-row {
+  position: relative;
+  width: 100%;
   display: flex;
-  flex-direction: row;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
+  min-height: 42px;
 }
 
 .switch-link {
+  position: absolute;
+  top: 50%;
+  left: calc(50% + 60px);
+  transform: translateY(-50%);
+  white-space: nowrap;
   color: #999;
   font-size: 13px;
   text-decoration: underline;
