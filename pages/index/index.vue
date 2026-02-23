@@ -20,6 +20,7 @@
       @select="selectCategory"
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
+      @share="handleShare"
       @open-settings="openSettings"
       @logout="handleLogout"
     />
@@ -313,6 +314,82 @@ export default {
 
     toggleSound() {
       uni.showToast({ title: '声音开关', icon: 'none' });
+    },
+
+    getShareProviderLabel(provider) {
+      if (provider === 'weixin') return '微信好友';
+      if (provider === 'qq') return 'QQ';
+      if (provider === 'sinaweibo') return '微博';
+      return provider;
+    },
+
+    handleShare() {
+      const shareData = {
+        title: '你说我猜马上发财',
+        summary: '来和我一起玩你说我猜，看看谁更懂你！',
+        href: 'https://github.com/BDGamer-org/SayIt_GuessIt_GetRich',
+        imageUrl: '/static/logo.png'
+      };
+      const fallbackCopy = () => {
+        uni.setClipboardData({
+          data: shareData.href,
+          success: () => {
+            uni.showToast({ title: '链接已复制，快去分享给好友', icon: 'none' });
+          }
+        });
+      };
+
+      // #ifdef H5
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        navigator.share({
+          title: shareData.title,
+          text: shareData.summary,
+          url: shareData.href
+        }).catch(() => {});
+        return;
+      }
+      // #endif
+
+      if (typeof uni.getProvider !== 'function' || typeof uni.share !== 'function') {
+        fallbackCopy();
+        return;
+      }
+
+      uni.getProvider({
+        service: 'share',
+        success: ({ provider = [] }) => {
+          const providers = provider.filter(Boolean);
+          if (!providers.length) {
+            fallbackCopy();
+            return;
+          }
+
+          uni.showActionSheet({
+            itemList: providers.map((item) => this.getShareProviderLabel(item)),
+            success: ({ tapIndex }) => {
+              const selected = providers[tapIndex];
+              uni.share({
+                provider: selected,
+                type: 0,
+                scene: selected === 'weixin' ? 'WXSceneSession' : undefined,
+                href: shareData.href,
+                title: shareData.title,
+                summary: shareData.summary,
+                imageUrl: shareData.imageUrl,
+                success: () => {
+                  uni.showToast({ title: '分享成功', icon: 'none' });
+                },
+                fail: () => {
+                  fallbackCopy();
+                }
+              });
+            }
+          });
+        },
+        fail: () => {
+          fallbackCopy();
+        }
+      });
     },
 
     openSettings() {
@@ -634,7 +711,7 @@ export default {
   --energy-plus-size: 22px;
   --menu-right: 36px;
   --menu-bottom: 60px;
-  --menu-gap: 12px;
+  --menu-gap: 16rpx;
   --menu-icon-size: 44px;
   --menu-icon-font-size: 20px;
   --home-horizontal-padding: 20px;
@@ -684,7 +761,7 @@ export default {
   --energy-plus-size: 20px;
   --menu-right: 28px;
   --menu-bottom: 50px;
-  --menu-gap: 10px;
+  --menu-gap: 14rpx;
   --menu-icon-size: 40px;
   --menu-icon-font-size: 18px;
   --home-horizontal-padding: 12px;

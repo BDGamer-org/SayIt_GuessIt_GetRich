@@ -4,7 +4,12 @@
     <view class="energy-pill-wrapper">
       <EnergyPill :count="lives" @add="$emit('addEnergy')" />
     </view>
-    <RightMenu @history="$emit('showHistory')" @sound="$emit('toggleSound')" @logout="$emit('logout')" />
+    <RightMenu
+      @history="$emit('showHistory')"
+      @sound="$emit('toggleSound')"
+      @share="$emit('share')"
+      @logout="$emit('logout')"
+    />
 
     <view class="scroll-area">
       <view class="slide-handle left">
@@ -60,7 +65,7 @@ export default {
       default: 5
     }
   },
-  emits: ['select', 'showHistory', 'toggleSound', 'addEnergy', 'logout']
+  emits: ['select', 'showHistory', 'toggleSound', 'share', 'addEnergy', 'logout']
 }
 </script>
 
@@ -78,8 +83,8 @@ export default {
 
 .bg-image {
   position: absolute;
-  bottom: 10px;
-  right: -7%;
+  bottom: 15%;
+  right: -3%;
   width: 75%;
   z-index: 0;
   pointer-events: none;
