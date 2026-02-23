@@ -1,8 +1,8 @@
 <template>
-  <view class="modal-overlay">
+  <view class="auth-bg">
+    <image class="auth-bg-img" src="/static/getstart.png" mode="aspectFill" />
     <PaperCard modifier="auth">
       <text class="card-main-title">{{ isRegister ? '注册' : '登录' }}</text>
-      <text class="card-subtitle">{{ isRegister ? '创建你的游戏账号' : '欢迎回来' }}</text>
 
       <view class="auth-form">
         <text class="input-label">用户名:</text>
@@ -29,11 +29,13 @@
       <text v-if="success" class="auth-success">{{ success }}</text>
 
       <view class="card-buttons">
-        <SketchButton type="primary" @click="$emit('submit')">
-          {{ isRegister ? '注册' : '登录' }}
-        </SketchButton>
-        <view class="cancel-link" @click="$emit('switch')">
-          {{ isRegister ? '已有账号? 点击登录' : '新玩家? 点击注册' }}
+        <view class="button-row">
+          <SketchButton type="primary" @click="$emit('submit')">
+            {{ isRegister ? '注册' : '登录' }}
+          </SketchButton>
+          <text class="switch-link" @click="$emit('switch')">
+            {{ isRegister ? '已有账号? 点击登录' : '新玩家? 点击注册' }}
+          </text>
         </view>
       </view>
     </PaperCard>
@@ -58,17 +60,27 @@ export default {
 </script>
 
 <style scoped>
-.modal-overlay {
+.auth-bg {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(248, 246, 240, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
+  background-color: #f8f6f0;
+  background-image:
+    linear-gradient(rgba(200, 200, 200, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 200, 200, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.auth-bg-img {
+  position: absolute;
+  width: 70%;
+  height: 70%;
 }
 
 .card-main-title {
@@ -77,12 +89,6 @@ export default {
   font-weight: bold;
   color: #333;
   margin-bottom: 8px;
-}
-
-.card-subtitle {
-  font-size: var(--modal-subtitle-size, 14px);
-  color: #666;
-  margin-bottom: 12px;
 }
 
 .auth-form {
@@ -126,13 +132,19 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
   margin-top: 10px;
 }
 
-.cancel-link {
+.button-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.switch-link {
   color: #999;
-  font-size: 14px;
+  font-size: 13px;
   text-decoration: underline;
 }
 </style>
