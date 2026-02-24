@@ -334,7 +334,7 @@ export default {
       #f97316 86px 96px,
       transparent 96px 102px
     );
-  background-size: 2px 100%, 100% 2px;
+  background-size: 2px calc(100% - 14px), 100% 2px;
   background-position: left top, left bottom;
   background-repeat: no-repeat, no-repeat;
   pointer-events: none;
