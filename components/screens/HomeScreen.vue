@@ -1,6 +1,8 @@
 <template>
   <view class="home-screen">
     <image class="bg-image" src="/static/button.png" mode="widthFix" />
+    <image class="direction-left-image" src="/static/directionLeft.png" mode="widthFix" />
+    <image class="direction-image" src="/static/direction.png" mode="widthFix" />
     <view class="energy-pill-wrapper">
       <EnergyPill :count="lives" @add="$emit('addEnergy')" />
     </view>
@@ -12,38 +14,45 @@
     />
 
     <view class="scroll-area">
-      <view class="slide-handle left">
-        <view class="rounded-chevron left"></view>
+      <view
+        class="slide-handle left"
+        :class="{ disabled: startIndex <= 0 }"
+        @click="slideToPrev"
+      >
+        <text class="rounded-chevron">&lt;</text>
       </view>
-      <scroll-view class="category-scroll" scroll-x="true" show-scrollbar="false">
+      <scroll-view
+        class="category-scroll"
+        scroll-x="true"
+        show-scrollbar="false"
+        scroll-with-animation="true"
+        :scroll-left="scrollLeft"
+        @scroll="onCategoryScroll"
+      >
         <view class="card-container">
           <view
+            v-for="(item, index) in categories"
+            :id="`category-${index}`"
+            :key="item.key"
             class="category-card"
-            :class="{ active: selectedCategory === 'idiom' }"
-            @click="$emit('select', 'idiom')"
+            :class="{
+              active: item.enabled && selectedCategory === item.key,
+              placeholder: !item.enabled
+            }"
+            @click="handleCategoryClick(item)"
           >
-            <view class="card-sketch">
-              <text class="card-title">中华成语</text>
-            </view>
-          </view>
-          <view
-            class="category-card"
-            :class="{ active: selectedCategory === 'life' }"
-            @click="$emit('select', 'life')"
-          >
-            <view class="card-sketch">
-              <text class="card-title">日常生活</text>
-            </view>
-          </view>
-          <view class="category-card placeholder">
-            <view class="card-sketch dashed">
-              <text class="card-title">明星艺人</text>
+            <view class="card-sketch" :class="{ dashed: !item.enabled }">
+              <text class="card-title">{{ item.label }}</text>
             </view>
           </view>
         </view>
       </scroll-view>
-      <view class="slide-handle right">
-        <view class="rounded-chevron right"></view>
+      <view
+        class="slide-handle right"
+        :class="{ disabled: startIndex >= maxStartIndex }"
+        @click="slideToNext"
+      >
+        <text class="rounded-chevron">&gt;</text>
       </view>
     </view>
   </view>
@@ -63,6 +72,74 @@ export default {
     lives: {
       type: Number,
       default: 5
+    }
+  },
+  data() {
+    return {
+      startIndex: 0,
+      visibleCardCount: 3,
+      scrollLeft: 0,
+      cardStepPx: 240,
+      categories: [
+        { key: 'idiom', label: '中华成语', enabled: true },
+        { key: 'life', label: '日常生活', enabled: true },
+        { key: 'star', label: '明星艺人', enabled: false },
+        { key: 'city', label: '猜猜城市', enabled: false },
+        { key: 'movie', label: '影视作品', enabled: false }
+      ]
+    };
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.measureCardStep();
+    });
+  },
+  computed: {
+    maxStartIndex() {
+      return Math.max(0, this.categories.length - 1);
+    }
+  },
+  methods: {
+    measureCardStep() {
+      if (typeof uni.createSelectorQuery !== 'function') return;
+      const query = uni.createSelectorQuery().in(this);
+      query.select('.category-card').boundingClientRect();
+      query.select('.card-container').fields({ computedStyle: ['gap'] });
+      query.exec((res = []) => {
+        const cardRect = res[0];
+        const styleInfo = res[1] || {};
+        const gapValue = Number.parseFloat((styleInfo.computedStyle && styleInfo.computedStyle.gap) || '40');
+        if (cardRect && cardRect.width) {
+          this.cardStepPx = cardRect.width + (Number.isFinite(gapValue) ? gapValue : 40);
+        }
+      });
+    },
+    handleCategoryClick(item) {
+      if (!item.enabled) return;
+      this.$emit('select', item.key);
+    },
+    onCategoryScroll(event) {
+      const left = Number(event && event.detail ? event.detail.scrollLeft : 0);
+      if (!Number.isFinite(left)) return;
+      this.scrollLeft = left;
+      if (!this.cardStepPx) return;
+      const nextIndex = Math.max(0, Math.min(this.maxStartIndex, Math.round(left / this.cardStepPx)));
+      if (nextIndex !== this.startIndex) {
+        this.startIndex = nextIndex;
+      }
+    },
+
+    slideToNext() {
+      if (this.startIndex >= this.maxStartIndex) return;
+      const nextIndex = Math.min(this.startIndex + this.visibleCardCount, this.maxStartIndex);
+      this.startIndex = nextIndex;
+      this.scrollLeft = this.cardStepPx * nextIndex;
+    },
+    slideToPrev() {
+      if (this.startIndex <= 0) return;
+      const nextIndex = Math.max(this.startIndex - this.visibleCardCount, 0);
+      this.startIndex = nextIndex;
+      this.scrollLeft = this.cardStepPx * nextIndex;
     }
   },
   emits: ['select', 'showHistory', 'toggleSound', 'share', 'addEnergy', 'logout']
@@ -90,6 +167,24 @@ export default {
   pointer-events: none;
 }
 
+.direction-image {
+  position: absolute;
+  bottom: 10%;
+  right: -51%;
+  width: 75%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.direction-left-image {
+  position: absolute;
+  bottom: 10%;
+  left: -3%;
+  width: 75%;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .energy-pill-wrapper {
   position: absolute;
   top: 24rpx;
@@ -105,6 +200,8 @@ export default {
   width: 100%;
   max-width: 800px;
   padding: 0 16px;
+  position: relative;
+  z-index: 2;
 }
 
 .slide-handle {
@@ -112,7 +209,7 @@ export default {
   height: var(--home-card-height, 140px);
   background: transparent;
   position: relative;
-  z-index: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,50 +217,28 @@ export default {
   flex-shrink: 0;
 }
 
+.slide-handle.left {
+  left: 0;
+}
+
+.slide-handle.disabled {
+  opacity: 0.45;
+}
+
 .rounded-chevron {
-  position: relative;
-  width: 52px;
-  height: 68px;
+  font-size: 70px;
+  font-weight: 900;
+  line-height: 1;
+  color: #333;
+  font-family: 'Arial Rounded MT Bold', 'PingFang SC', sans-serif;
 }
 
-.rounded-chevron::before,
-.rounded-chevron::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 38px;
-  box-sizing: border-box;
-  background: #fff;
-  border: 4px solid #333;
-  border-radius: 999px;
+.slide-handle.right .rounded-chevron {
+  color: transparent;
 }
 
-.rounded-chevron.left::before {
-  left: 14px;
-  top: 0;
-  transform-origin: left center;
-  transform: rotate(42deg);
-}
-
-.rounded-chevron.left::after {
-  left: 14px;
-  bottom: 0;
-  transform-origin: left center;
-  transform: rotate(-48deg);
-}
-
-.rounded-chevron.right::before {
-  right: 14px;
-  top: 0;
-  transform-origin: right center;
-  transform: rotate(-42deg);
-}
-
-.rounded-chevron.right::after {
-  right: 14px;
-  bottom: 0;
-  transform-origin: right center;
-  transform: rotate(48deg);
+.slide-handle.left .rounded-chevron {
+  color: transparent;
 }
 
 .category-scroll {
@@ -177,7 +252,7 @@ export default {
 .card-container {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 40px;
   padding: 10px 28px;
