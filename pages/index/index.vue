@@ -20,9 +20,16 @@
       @select="selectCategory"
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
+      @add-energy="openRecharge"
       @share="handleShare"
       @open-settings="openSettings"
       @logout="handleLogout"
+    />
+
+    <RechargeScreen
+      v-if="gameStatus === 'recharge'"
+      @close="closeRecharge"
+      @choose="handleRechargeChoose"
     />
 
     <!-- Setup Screen -->
@@ -76,6 +83,7 @@ import GameScreen from '@/components/screens/GameScreen.vue';
 import ResultScreen from '@/components/screens/ResultScreen.vue';
 import CountdownScreen from '@/components/screens/CountdownScreen.vue';
 import HistoryScreen from '@/components/screens/HistoryScreen.vue';
+import RechargeScreen from '@/components/screens/RechargeScreen.vue';
 import { useGameApi } from '@/composables/useGameApi.js';
 import { useGameLogic } from '@/composables/useGameLogic.js';
 
@@ -90,7 +98,8 @@ export default {
     GameScreen,
     ResultScreen,
     CountdownScreen,
-    HistoryScreen
+    HistoryScreen,
+    RechargeScreen
   },
 
   setup() {
@@ -394,6 +403,21 @@ export default {
 
     openSettings() {
       uni.showToast({ title: '设置', icon: 'none' });
+    },
+
+    openRecharge() {
+      this.gameStatus = 'recharge';
+    },
+
+    closeRecharge() {
+      this.gameStatus = 'home';
+    },
+
+    handleRechargeChoose({ planId, method }) {
+      uni.showToast({
+        title: `已选${method}（${planId}），支付接入中`,
+        icon: 'none'
+      });
     },
 
     handleLogout() {
