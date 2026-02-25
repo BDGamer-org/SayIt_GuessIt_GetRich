@@ -13,13 +13,13 @@
             <view class="checkbox">{{ selectedTime===60 ? '☑' : '☐' }}</view>
             <text>60s</text>
           </view>
+          <view class="time-item" :class="{active: selectedTime===90}" @click="$emit('update:selectedTime', 90)">
+            <view class="checkbox">{{ selectedTime===90 ? '☑' : '☐' }}</view>
+            <text>90s</text>
+          </view>
           <view class="time-item" :class="{active: selectedTime===120}" @click="$emit('update:selectedTime', 120)">
             <view class="checkbox">{{ selectedTime===120 ? '☑' : '☐' }}</view>
             <text>120s</text>
-          </view>
-          <view class="time-item" :class="{active: selectedTime===180}" @click="$emit('update:selectedTime', 180)">
-            <view class="checkbox">{{ selectedTime===180 ? '☑' : '☐' }}</view>
-            <text>180s</text>
           </view>
         </view>
 
