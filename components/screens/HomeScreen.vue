@@ -188,7 +188,7 @@ export default {
 .energy-pill-wrapper {
   position: absolute;
   top: 24rpx;
-  left: 24rpx;
+  left: 50rpx;
   z-index: 10;
 }
 
