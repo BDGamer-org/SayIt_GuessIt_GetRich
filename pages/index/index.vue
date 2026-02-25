@@ -126,8 +126,8 @@ export default {
       gameStatus: 'home',
       score: 0,
       timeLeft: 60,
-      selectedTime: 120,
-      lastTime: 120,
+      selectedTime: 60,
+      lastTime: 60,
       selectedCategory: 'idiom',
       currentWord: '准备',
       currentWordId: null,
@@ -317,6 +317,7 @@ export default {
     selectCategory(type) {
       if (type === 'idiom' || type === 'life') {
         this.selectedCategory = type;
+        this.selectedTime = 60;
         this.gameStatus = 'setup';
       }
     },
