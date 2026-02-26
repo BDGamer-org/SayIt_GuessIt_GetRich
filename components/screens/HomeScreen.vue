@@ -5,6 +5,10 @@
     <image class="direction-image" src="/static/direction.png" mode="widthFix" />
     <view class="energy-pill-wrapper">
       <EnergyPill :count="lives" @add="$emit('addEnergy')" />
+      <view v-if="lifeRecoveryCountdownLabel" class="life-countdown-wrap">
+        <text class="life-countdown">{{ lifeRecoveryCountdownLabel }}</text>
+        <text class="life-countdown-hint">后恢复1生命值</text>
+      </view>
     </view>
     <RightMenu
       @history="$emit('showHistory')"
@@ -72,6 +76,10 @@ export default {
     lives: {
       type: Number,
       default: 5
+    },
+    lifeRecoveryCountdownLabel: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -190,6 +198,33 @@ export default {
   top: 24rpx;
   left: 50rpx;
   z-index: 10;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.life-countdown-wrap {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6rpx;
+  margin-left: 0;
+}
+
+.life-countdown {
+  font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
+  font-size: 18rpx;
+  font-weight: 900;
+  color: #333;
+  line-height: 1;
+}
+
+.life-countdown-hint {
+  font-family: 'Long Cang', 'PingFang SC', sans-serif;
+  font-size: 18rpx;
+  color: #333;
+  line-height: 1;
 }
 
 .scroll-area {
