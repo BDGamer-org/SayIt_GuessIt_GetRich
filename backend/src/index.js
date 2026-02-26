@@ -1,4 +1,134 @@
-// Simplified Worker with Username/Password Auth
+const MAX_LIVES = 5
+const LIFE_RECOVERY_MS = 30 * 60 * 1000
+
+const getSupabaseHeaders = (env, useServiceKey = false) => {
+  const token = useServiceKey ? env.SUPABASE_SERVICE_KEY : env.SUPABASE_ANON_KEY
+  return {
+    'apikey': token,
+    'Authorization': `Bearer ${token}`,
+  }
+}
+
+const clampLives = (value) => {
+  const lives = Number(value)
+  if (!Number.isFinite(lives)) return MAX_LIVES
+  return Math.max(0, Math.min(MAX_LIVES, lives))
+}
+
+const normalizeQueue = (rawQueue) => {
+  let source = rawQueue
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source)
+    } catch (e) {
+      source = []
+    }
+  }
+  if (!Array.isArray(source)) return []
+  return source
+    .map((item) => Number(item))
+    .filter((item) => Number.isFinite(item))
+    .sort((a, b) => a - b)
+}
+
+const isSameQueue = (a, b) => {
+  if (!Array.isArray(a) || !Array.isArray(b)) return false
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
+}
+
+const applyLifeRecoveryState = (rawLives, rawQueue, nowMs = Date.now()) => {
+  let lives = clampLives(rawLives)
+  let queue = normalizeQueue(rawQueue)
+  const originalLives = lives
+  const originalQueue = [...queue]
+
+  while (queue.length && nowMs - queue[0] >= LIFE_RECOVERY_MS && lives < MAX_LIVES) {
+    queue.shift()
+    lives += 1
+  }
+
+  const missingLives = Math.max(0, MAX_LIVES - lives)
+  if (missingLives === 0) {
+    queue = []
+  } else {
+    if (queue.length > missingLives) {
+      queue = queue.slice(0, missingLives)
+    }
+    while (queue.length < missingLives) {
+      queue.push(nowMs)
+    }
+  }
+
+  return {
+    lives,
+    queue,
+    nextRecoverAtMs: queue.length > 0 && lives < MAX_LIVES ? queue[0] + LIFE_RECOVERY_MS : null,
+    changed: lives !== originalLives || !isSameQueue(queue, originalQueue)
+  }
+}
+
+const buildLivesResponse = (state, nowMs = Date.now()) => {
+  const remainSeconds = state.nextRecoverAtMs
+    ? Math.max(0, Math.ceil((state.nextRecoverAtMs - nowMs) / 1000))
+    : null
+
+  return {
+    lives: state.lives,
+    max_lives: MAX_LIVES,
+    next_recover_at: state.nextRecoverAtMs ? new Date(state.nextRecoverAtMs).toISOString() : null,
+    next_recover_in_seconds: remainSeconds
+  }
+}
+
+const fetchPlayerLifeRecord = async (env, playerId) => {
+  const response = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/players?id=eq.${encodeURIComponent(playerId)}&select=id,lives,life_recovery_queue`,
+    {
+      headers: getSupabaseHeaders(env, true)
+    }
+  )
+
+  if (!response.ok) {
+    const details = await response.text()
+    if (details.includes('life_recovery_queue')) {
+      throw new Error('数据库缺少 life_recovery_queue 字段，请先执行迁移 SQL')
+    }
+    throw new Error(`读取生命值失败: ${details}`)
+  }
+
+  const players = await response.json()
+  if (!Array.isArray(players) || players.length === 0) {
+    throw new Error('玩家不存在')
+  }
+
+  return players[0]
+}
+
+const persistPlayerLifeState = async (env, playerId, state) => {
+  const response = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/players?id=eq.${encodeURIComponent(playerId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        ...getSupabaseHeaders(env, true),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lives: state.lives,
+        life_recovery_queue: state.queue
+      })
+    }
+  )
+
+  if (!response.ok) {
+    const details = await response.text()
+    throw new Error(`保存生命值失败: ${details}`)
+  }
+}
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -73,7 +203,8 @@ export default {
               password_hash: password, // In production, hash this!
               player_name: username,
               backup_code: dummyBackupCode, // For backward compatibility with old schema
-              lives: 5
+              lives: 5,
+              life_recovery_queue: []
             })
           }
         )
@@ -85,6 +216,8 @@ export default {
             // Check for specific database errors
             if (errorData.message?.includes('username')) {
               errorMessage = '用户名已被使用'
+            } else if (errorData.message?.includes('life_recovery_queue')) {
+              errorMessage = '数据库缺少 life_recovery_queue 字段，请先执行迁移 SQL'
             } else if (errorData.message?.includes('null value')) {
               errorMessage = '系统错误：数据库配置不完整'
             } else {
@@ -104,7 +237,8 @@ export default {
 
         return new Response(JSON.stringify({
           player_id: player.id,
-          player_name: player.player_name || player.username
+          player_name: player.player_name || player.username,
+          ...buildLivesResponse(applyLifeRecoveryState(player.lives, player.life_recovery_queue))
         }), {
           status: 201,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -154,9 +288,16 @@ export default {
           })
         }
 
+        const nowMs = Date.now()
+        const lifeState = applyLifeRecoveryState(player.lives, player.life_recovery_queue, nowMs)
+        if (lifeState.changed) {
+          await persistPlayerLifeState(env, player.id, lifeState)
+        }
+
         return new Response(JSON.stringify({
           player_id: player.id,
-          player_name: player.player_name || player.username
+          player_name: player.player_name || player.username,
+          ...buildLivesResponse(lifeState, nowMs)
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
@@ -173,20 +314,15 @@ export default {
           })
         }
 
-        const response = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=lives`,
-          {
-            headers: {
-              'apikey': env.SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
-            }
-          }
-        )
+        const player = await fetchPlayerLifeRecord(env, playerId)
+        const nowMs = Date.now()
+        const state = applyLifeRecoveryState(player.lives, player.life_recovery_queue, nowMs)
 
-        const players = await response.json()
-        const lives = players[0]?.lives ?? 5
+        if (state.changed) {
+          await persistPlayerLifeState(env, playerId, state)
+        }
 
-        return new Response(JSON.stringify({ lives }), {
+        return new Response(JSON.stringify(buildLivesResponse(state, nowMs)), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
@@ -202,42 +338,27 @@ export default {
           })
         }
 
-        // Get current lives
-        const getRes = await fetch(
-          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}&select=lives`,
-          {
-            headers: {
-              'apikey': env.SUPABASE_SERVICE_KEY,
-              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-            }
+        const nowMs = Date.now()
+        const player = await fetchPlayerLifeRecord(env, playerId)
+        const state = applyLifeRecoveryState(player.lives, player.life_recovery_queue, nowMs)
+
+        if (state.lives <= 0) {
+          if (state.changed) {
+            await persistPlayerLifeState(env, playerId, state)
           }
-        )
-
-        const players = await getRes.json()
-        const currentLives = players[0]?.lives ?? 0
-
-        if (currentLives <= 0) {
-          return new Response(JSON.stringify({ error: '没有足够的体力' }), {
+          return new Response(JSON.stringify({
+            error: '没有足够的体力',
+            ...buildLivesResponse(state, nowMs)
+          }), {
             status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
         }
 
-        // Decrement lives
-        await fetch(
-          `${env.SUPABASE_URL}/rest/v1/players?id=eq.${playerId}`,
-          {
-            method: 'PATCH',
-            headers: {
-              'apikey': env.SUPABASE_SERVICE_KEY,
-              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ lives: currentLives - 1 })
-          }
-        )
+        const consumedState = applyLifeRecoveryState(state.lives - 1, [...state.queue, nowMs], nowMs)
+        await persistPlayerLifeState(env, playerId, consumedState)
 
-        return new Response(JSON.stringify({ lives: currentLives - 1 }), {
+        return new Response(JSON.stringify(buildLivesResponse(consumedState, nowMs)), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
