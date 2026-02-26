@@ -99,7 +99,7 @@ export function useGameApi() {
       header: { 'X-Player-ID': playerId },
       success: (res) => {
         if (res.statusCode === 200) {
-          onSuccess(res.data.lives);
+          onSuccess(res.data);
         } else {
           onError('加载失败');
         }
@@ -119,7 +119,7 @@ export function useGameApi() {
       header: { 'X-Player-ID': playerId },
       success: (res) => {
         if (res.statusCode === 200) {
-          onSuccess(res.data.lives);
+          onSuccess(res.data);
         } else {
           onError(res.data.error || '体力不足');
         }
