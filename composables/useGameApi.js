@@ -131,6 +131,30 @@ export function useGameApi() {
     });
   };
 
+  // Recharge lives
+  const rechargeLife = (playerId, payload, onSuccess, onError) => {
+    uni.request({
+      url: `${API_BASE_URL}/api/lives/recharge`,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+        'X-Player-ID': playerId
+      },
+      data: payload,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          onSuccess(res.data);
+        } else {
+          onError(res.data.error || '充值失败');
+        }
+      },
+      fail: (err) => {
+        console.error('Recharge life error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
   // Fetch word bank from backend
   const fetchWordBank = (category, options = {}, onSuccess, onError) => {
     const { limit = 320, excludeIds = [] } = options;
@@ -165,6 +189,7 @@ export function useGameApi() {
     submitScore,
     fetchLives,
     consumeLife,
+    rechargeLife,
     fetchWordBank
   };
 }
