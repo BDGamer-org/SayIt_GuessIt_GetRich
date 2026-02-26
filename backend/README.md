@@ -10,6 +10,7 @@ Cloudflare Worker backend for the SayIt GuessIt GetRich game.
 | POST | `/api/login` | Login with username and password |
 | GET | `/api/lives` | Get current lives and next recovery countdown |
 | POST | `/api/lives/consume` | Consume 1 life and start recovery timer |
+| POST | `/api/lives/recharge` | Recharge lives by plan or amount |
 | GET | `/api/history` | Get user's score history (requires X-Player-ID header) |
 | POST | `/api/score` | Submit a score (requires X-Player-ID header) |
 | GET | `/api/words` | Get random word bank |
@@ -31,6 +32,11 @@ create table players (
   created_at timestamp default now()
 );
 ```
+
+Notes:
+- `lives` can be greater than `5` after recharge.
+- Free recovery only applies when `lives < 5` (30 min +1, up to 5).
+- Recharge endpoint currently supports `p1`, `p6`, `p12`.
 
 ### scores
 ```sql
