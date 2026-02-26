@@ -90,7 +90,8 @@ import { useGameLogic } from '@/composables/useGameLogic.js';
 
 const RECENT_WORD_LIMIT = 200;
 const RECENT_WORD_STORAGE_KEY = 'recentWordIds';
-const MAX_LIVES = 5;
+const LIFE_RECOVERY_CAP = 5;
+const MAX_CLIENT_LIVES = 999999;
 const LIFE_SYNC_INTERVAL_MS = 15000;
 const LIFE_COUNTDOWN_TICK_MS = 1000;
 
@@ -107,7 +108,7 @@ export default {
   },
 
   setup() {
-    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchLives, consumeLife, fetchWordBank } = useGameApi();
+    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchLives, consumeLife, rechargeLife, fetchWordBank } = useGameApi();
     const { fetchWords, startMotion, stopMotion, handleTilt } = useGameLogic();
 
     return {
@@ -117,6 +118,7 @@ export default {
       apiSubmitScore,
       fetchLives,
       consumeLife,
+      rechargeLife,
       fetchWordBank,
       fetchWords,
       startMotion,
@@ -215,7 +217,9 @@ export default {
         this.playerId = uni.getStorageSync('playerId') || '';
         this.playerName = uni.getStorageSync('playerName') || '';
         const storedLives = Number(uni.getStorageSync('lives'));
-        this.lives = Number.isFinite(storedLives) ? Math.max(0, Math.min(MAX_LIVES, storedLives)) : MAX_LIVES;
+        this.lives = Number.isFinite(storedLives)
+          ? Math.max(0, Math.min(MAX_CLIENT_LIVES, Math.floor(storedLives)))
+          : LIFE_RECOVERY_CAP;
         this.gameStatus = this.playerId ? 'home' : 'auth';
       } catch (e) {
         this.gameStatus = 'auth';
@@ -224,8 +228,8 @@ export default {
 
     clampLives(value) {
       const lives = Number(value);
-      if (!Number.isFinite(lives)) return MAX_LIVES;
-      return Math.max(0, Math.min(MAX_LIVES, lives));
+      if (!Number.isFinite(lives)) return LIFE_RECOVERY_CAP;
+      return Math.max(0, Math.min(MAX_CLIENT_LIVES, Math.floor(lives)));
     },
 
     parseLifePayload(payload) {
@@ -256,13 +260,13 @@ export default {
     applyLivesPayload(payload) {
       const { lives, nextRecoverAtMs } = this.parseLifePayload(payload);
       this.lives = lives;
-      this.lifeNextRecoverAtMs = lives >= MAX_LIVES ? null : nextRecoverAtMs;
+      this.lifeNextRecoverAtMs = lives >= LIFE_RECOVERY_CAP ? null : nextRecoverAtMs;
       uni.setStorageSync('lives', this.lives);
       this.updateLifeRecoveryCountdownLabel();
     },
 
     updateLifeRecoveryCountdownLabel() {
-      if (this.lives >= MAX_LIVES || !this.lifeNextRecoverAtMs) {
+      if (this.lives >= LIFE_RECOVERY_CAP || !this.lifeNextRecoverAtMs) {
         this.lifeRecoveryCountdownLabel = '';
         return;
       }
@@ -380,12 +384,10 @@ export default {
         (data) => {
           this.playerId = data.player_id;
           this.playerName = data.player_name || this.username;
-          const initLives = Number(data.lives);
-          this.lives = Number.isFinite(initLives) ? Math.max(0, Math.min(MAX_LIVES, initLives)) : MAX_LIVES;
+          this.applyLivesPayload(data);
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
-          uni.setStorageSync('lives', this.lives);
           this.initializeLifeRecovery();
 
           this.authSuccess = '注册成功!';
@@ -427,7 +429,7 @@ export default {
             },
             () => {
               // Fallback to default
-              this.lives = MAX_LIVES;
+              this.lives = LIFE_RECOVERY_CAP;
               this.lifeNextRecoverAtMs = null;
               this.lifeRecoveryCountdownLabel = '';
               this.initializeLifeRecovery();
@@ -561,10 +563,27 @@ export default {
     },
 
     handleRechargeChoose({ planId, method }) {
-      uni.showToast({
-        title: `已选${method}（${planId}），支付接入中`,
-        icon: 'none'
-      });
+      if (!this.playerId) {
+        uni.showToast({ title: '请先登录', icon: 'none' });
+        return;
+      }
+
+      this.rechargeLife(
+        this.playerId,
+        { plan_id: planId, payment_method: method },
+        (lifeData) => {
+          this.applyLivesPayload(lifeData);
+          this.startLifeRecoveryTicker();
+          this.closeRecharge();
+          uni.showToast({
+            title: `充值成功 +${lifeData.amount || ''}`.trim(),
+            icon: 'none'
+          });
+        },
+        (error) => {
+          uni.showToast({ title: error || '充值失败', icon: 'none' });
+        }
+      );
     },
 
     handleLogout() {
