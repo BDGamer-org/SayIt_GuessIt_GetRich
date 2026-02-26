@@ -155,6 +155,53 @@ export function useGameApi() {
     });
   };
 
+  // Create Stripe checkout session
+  const createStripeCheckout = (playerId, payload, onSuccess, onError) => {
+    uni.request({
+      url: `${API_BASE_URL}/api/pay/checkout/create`,
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+        'X-Player-ID': playerId
+      },
+      data: payload,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          onSuccess(res.data);
+        } else {
+          onError(res.data?.error || '创建支付订单失败');
+        }
+      },
+      fail: (err) => {
+        console.error('Create Stripe checkout error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
+  // Query payment order status
+  const fetchPaymentOrderStatus = (playerId, orderNo, onSuccess, onError) => {
+    const query = `?order_no=${encodeURIComponent(orderNo)}`;
+    uni.request({
+      url: `${API_BASE_URL}/api/pay/order-status${query}`,
+      method: 'GET',
+      header: {
+        'X-Player-ID': playerId
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          onSuccess(res.data);
+        } else {
+          onError(res.data?.error || '查询订单失败');
+        }
+      },
+      fail: (err) => {
+        console.error('Fetch payment order status error:', err);
+        onError('网络错误');
+      }
+    });
+  };
+
   // Fetch word bank from backend
   const fetchWordBank = (category, options = {}, onSuccess, onError) => {
     const { limit = 320, excludeIds = [] } = options;
@@ -190,6 +237,8 @@ export function useGameApi() {
     fetchLives,
     consumeLife,
     rechargeLife,
+    createStripeCheckout,
+    fetchPaymentOrderStatus,
     fetchWordBank
   };
 }

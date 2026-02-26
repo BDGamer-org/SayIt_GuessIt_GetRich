@@ -1,7 +1,6 @@
 <template>
   <view class="recharge-bg">
     <view class="recharge-content">
-      <image class="pay-overlay" src="/static/pay.png" mode="widthFix" />
 
       <view class="recharge-header">
         <SketchButton type="secondary" @click="$emit('close')">返回</SketchButton>
@@ -9,6 +8,8 @@
       </view>
 
       <view class="plans-area">
+        <image class="pay-overlay" src="/static/pay.png" mode="widthFix" />
+        
         <view class="plan-container">
           <view
             v-for="plan in plans"
@@ -16,8 +17,13 @@
             class="plan-card"
           >
             <view class="price-row">
-              <text class="price-text">{{ plan.priceMain }}</text>
-              <text v-if="plan.priceSuffix" class="price-month">{{ plan.priceSuffix }}</text>
+              <view class="price-main-block">
+                <view class="price-main-row">
+                  <text class="price-text">{{ plan.priceMain }}</text>
+                  <text v-if="plan.priceSuffix" class="price-month">{{ plan.priceSuffix }}</text>
+                </view>
+                <text v-if="plan.promoText" class="price-promo">{{ plan.promoText }}</text>
+              </view>
             </view>
 
             <text class="get-line">得</text>
@@ -47,15 +53,16 @@ export default {
       plans: [
         {
           id: 'p1',
-          priceMain: '¥1',
+          priceMain: '¥6',
           valueSegments: [
-            { text: '5', bold: true },
+            { text: '20', bold: true },
             { text: '生命值' }
           ]
         },
         {
           id: 'p6',
           priceMain: '¥6',
+          promoText: '限时优惠！',
           valueSegments: [
             { text: '40', bold: true },
             { text: '生命值' }
@@ -91,13 +98,7 @@ export default {
   },
   methods: {
     choosePlan(plan) {
-      uni.showActionSheet({
-        itemList: ['微信支付', '支付宝支付'],
-        success: (res) => {
-          const method = res.tapIndex === 0 ? '微信支付' : '支付宝支付';
-          this.$emit('choose', { planId: plan.id, method });
-        }
-      });
+      this.$emit('choose', { planId: plan.id, method: 'stripe_checkout' });
     }
   },
   emits: ['close', 'choose']
@@ -129,13 +130,8 @@ export default {
 }
 
 .pay-overlay {
-  position: absolute;
-  top: -30%;
-  left: 50%;
-  width: 130%;
-  transform: translateX(-50%);
-  z-index: 1;
-  /* opacity: 0.55; */
+  width: 100%; 
+  display: block;
   pointer-events: none;
 }
 
@@ -163,30 +159,26 @@ export default {
 }
 
 .plans-area {
-  margin-top: 0px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  max-width: 800px;
-  width: 100%;
-  padding: 16px 16px;
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  width: 130%;
+  transform: translateX(-50%);
+  z-index: 1;
 }
 
 .plan-container {
+  position: absolute;
+  inset: 0;
   display: grid;
   grid-template-columns: repeat(5, 1fr); 
   gap: 0; 
   align-items: center; 
   justify-items: center;
-  width: 100%;
-  box-sizing: border-box;
-  padding-top: 0;
-  padding-bottom: 14px;
-  padding-left: 11%;
-  padding-right: 2%;
+  padding-top: 8%; 
+  padding-bottom: 15%; 
+  padding-left: 21%;
+  padding-right: 16%;
 }
 
 .plan-card {
@@ -201,14 +193,26 @@ export default {
   align-items: center;
   text-align: center;
   background-color: transparent;
-  transform-origin: center center; /* gemini */
+  transform-origin: center center;
 }
 
 .price-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   margin-bottom: 8px;
+}
+
+.price-main-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.price-main-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
 }
 
 .price-text {
@@ -216,6 +220,14 @@ export default {
   font-size: clamp(20px, 2.5vw, 24px);
   font-weight: bold;
   color: #222;
+}
+
+.price-promo {
+  margin-top: 2px;
+  font-family: 'LongCang', 'PingFang SC', sans-serif;
+  font-size: clamp(12px, 1.4vw, 14px);
+  line-height: 1;
+  color: #d93025;
 }
 
 .price-month {

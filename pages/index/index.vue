@@ -108,7 +108,17 @@ export default {
   },
 
   setup() {
-    const { register, login, fetchHistory, submitScore: apiSubmitScore, fetchLives, consumeLife, rechargeLife, fetchWordBank } = useGameApi();
+    const {
+      register,
+      login,
+      fetchHistory,
+      submitScore: apiSubmitScore,
+      fetchLives,
+      consumeLife,
+      createStripeCheckout,
+      fetchPaymentOrderStatus,
+      fetchWordBank
+    } = useGameApi();
     const { fetchWords, startMotion, stopMotion, handleTilt } = useGameLogic();
 
     return {
@@ -118,7 +128,8 @@ export default {
       apiSubmitScore,
       fetchLives,
       consumeLife,
-      rechargeLife,
+      createStripeCheckout,
+      fetchPaymentOrderStatus,
       fetchWordBank,
       fetchWords,
       startMotion,
@@ -568,20 +579,98 @@ export default {
         return;
       }
 
-      this.rechargeLife(
+      this.createStripeCheckout(
         this.playerId,
         { plan_id: planId, payment_method: method },
-        (lifeData) => {
-          this.applyLivesPayload(lifeData);
-          this.startLifeRecoveryTicker();
+        (checkoutData) => {
+          const checkoutUrl = checkoutData?.checkout_url;
+          const orderNo = checkoutData?.order_no;
+          if (!checkoutUrl || !orderNo) {
+            uni.showToast({ title: '支付链接创建失败', icon: 'none' });
+            return;
+          }
+
+          this.openStripeCheckout(checkoutUrl);
           this.closeRecharge();
-          uni.showToast({
-            title: `充值成功 +${lifeData.amount || ''}`.trim(),
-            icon: 'none'
+
+          // #ifndef H5
+          uni.showModal({
+            title: '支付提示',
+            content: '请在 Stripe 支付页完成支付，回到应用后点击“我已支付”刷新体力。',
+            confirmText: '我已支付',
+            cancelText: '稍后',
+            success: (res) => {
+              if (res.confirm) {
+                this.checkPaymentOrderStatus(orderNo, 0);
+              }
+            }
           });
+          // #endif
         },
         (error) => {
-          uni.showToast({ title: error || '充值失败', icon: 'none' });
+          uni.showToast({ title: error || '创建支付失败', icon: 'none' });
+        }
+      );
+    },
+
+    openStripeCheckout(url) {
+      // #ifdef H5
+      if (typeof window !== 'undefined') {
+        window.location.href = url;
+        return;
+      }
+      // #endif
+
+      // #ifdef APP-PLUS
+      if (typeof plus !== 'undefined' && plus.runtime && plus.runtime.openURL) {
+        plus.runtime.openURL(url);
+        return;
+      }
+      // #endif
+
+      uni.setClipboardData({
+        data: url,
+        success: () => {
+          uni.showToast({ title: '支付链接已复制', icon: 'none' });
+        }
+      });
+    },
+
+    checkPaymentOrderStatus(orderNo, attempt = 0) {
+      if (!this.playerId || !orderNo) return;
+
+      this.fetchPaymentOrderStatus(
+        this.playerId,
+        orderNo,
+        (orderData) => {
+          if (orderData?.status === 'paid') {
+            if (orderData.lives_state) {
+              this.applyLivesPayload(orderData.lives_state);
+            } else {
+              this.syncLivesFromServer(true);
+            }
+            this.startLifeRecoveryTicker();
+            uni.showToast({ title: '充值到账', icon: 'none' });
+            return;
+          }
+
+          if (attempt >= 9) {
+            uni.showToast({ title: '订单未支付，可稍后重试', icon: 'none' });
+            return;
+          }
+
+          setTimeout(() => {
+            this.checkPaymentOrderStatus(orderNo, attempt + 1);
+          }, 2000);
+        },
+        () => {
+          if (attempt >= 2) {
+            uni.showToast({ title: '查询订单失败', icon: 'none' });
+            return;
+          }
+          setTimeout(() => {
+            this.checkPaymentOrderStatus(orderNo, attempt + 1);
+          }, 1500);
         }
       );
     },
