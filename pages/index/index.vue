@@ -17,6 +17,7 @@
       v-if="gameStatus === 'home'"
       :selected-category="selectedCategory"
       :lives="lives"
+      :life-recovery-countdown-label="lifeRecoveryCountdownLabel"
       @select="selectCategory"
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
@@ -89,6 +90,9 @@ import { useGameLogic } from '@/composables/useGameLogic.js';
 
 const RECENT_WORD_LIMIT = 200;
 const RECENT_WORD_STORAGE_KEY = 'recentWordIds';
+const MAX_LIVES = 5;
+const LIFE_SYNC_INTERVAL_MS = 15000;
+const LIFE_COUNTDOWN_TICK_MS = 1000;
 
 export default {
   components: {
@@ -134,6 +138,8 @@ export default {
       wordList: [],
       isLocked: false,
       timerInterval: null,
+      lifeRecoveryInterval: null,
+      lifeSyncInterval: null,
       recentWordIds: [],
       startingGame: false,
       currentWordSource: '',
@@ -149,6 +155,8 @@ export default {
 
       // Lives
       lives: 5,
+      lifeRecoveryCountdownLabel: '',
+      lifeNextRecoverAtMs: null,
       authSuccess: '',
 
       // History
@@ -167,6 +175,7 @@ export default {
     }
     this.loadRecentWords();
     this.checkAuth();
+    this.initializeLifeRecovery();
   },
 
   onUnload() {
@@ -175,6 +184,7 @@ export default {
       this._handleWindowResize = null;
     }
     this.stopAll();
+    this.stopLifeRecoveryTicker();
   },
 
   methods: {
@@ -204,11 +214,141 @@ export default {
       try {
         this.playerId = uni.getStorageSync('playerId') || '';
         this.playerName = uni.getStorageSync('playerName') || '';
-        this.lives = uni.getStorageSync('lives') || 5;
+        const storedLives = Number(uni.getStorageSync('lives'));
+        this.lives = Number.isFinite(storedLives) ? Math.max(0, Math.min(MAX_LIVES, storedLives)) : MAX_LIVES;
         this.gameStatus = this.playerId ? 'home' : 'auth';
       } catch (e) {
         this.gameStatus = 'auth';
       }
+    },
+
+    clampLives(value) {
+      const lives = Number(value);
+      if (!Number.isFinite(lives)) return MAX_LIVES;
+      return Math.max(0, Math.min(MAX_LIVES, lives));
+    },
+
+    parseLifePayload(payload) {
+      if (payload && typeof payload === 'object') {
+        const parsedLives = this.clampLives(payload.lives);
+        let nextRecoverAtMs = null;
+
+        if (typeof payload.next_recover_at === 'string' && payload.next_recover_at) {
+          const parsedAtMs = Date.parse(payload.next_recover_at);
+          if (Number.isFinite(parsedAtMs)) {
+            nextRecoverAtMs = parsedAtMs;
+          }
+        }
+
+        if (!nextRecoverAtMs) {
+          const remainSeconds = Number(payload.next_recover_in_seconds);
+          if (Number.isFinite(remainSeconds) && remainSeconds >= 0) {
+            nextRecoverAtMs = Date.now() + (remainSeconds * 1000);
+          }
+        }
+
+        return { lives: parsedLives, nextRecoverAtMs };
+      }
+
+      return { lives: this.clampLives(payload), nextRecoverAtMs: null };
+    },
+
+    applyLivesPayload(payload) {
+      const { lives, nextRecoverAtMs } = this.parseLifePayload(payload);
+      this.lives = lives;
+      this.lifeNextRecoverAtMs = lives >= MAX_LIVES ? null : nextRecoverAtMs;
+      uni.setStorageSync('lives', this.lives);
+      this.updateLifeRecoveryCountdownLabel();
+    },
+
+    updateLifeRecoveryCountdownLabel() {
+      if (this.lives >= MAX_LIVES || !this.lifeNextRecoverAtMs) {
+        this.lifeRecoveryCountdownLabel = '';
+        return;
+      }
+      const remainMs = Math.max(0, this.lifeNextRecoverAtMs - Date.now());
+      const totalSeconds = Math.ceil(remainMs / 1000);
+      const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const ss = String(totalSeconds % 60).padStart(2, '0');
+      this.lifeRecoveryCountdownLabel = `${mm}:${ss}`;
+    },
+
+    syncLivesFromServer(silent = false) {
+      return new Promise((resolve) => {
+        if (!this.playerId) {
+          resolve(false);
+          return;
+        }
+
+        this.fetchLives(
+          this.playerId,
+          (data) => {
+            this.applyLivesPayload(data);
+            resolve(true);
+          },
+          (error) => {
+            if (!silent) {
+              console.error('Failed to sync lives:', error);
+            }
+            resolve(false);
+          }
+        );
+      });
+    },
+
+    startLifeRecoveryTicker() {
+      this.stopLifeRecoveryTicker();
+      if (!this.playerId) return;
+      this.lifeRecoveryInterval = setInterval(() => {
+        this.updateLifeRecoveryCountdownLabel();
+      }, LIFE_COUNTDOWN_TICK_MS);
+      this.lifeSyncInterval = setInterval(() => {
+        this.syncLivesFromServer(true);
+      }, LIFE_SYNC_INTERVAL_MS);
+    },
+
+    stopLifeRecoveryTicker() {
+      if (this.lifeRecoveryInterval) {
+        clearInterval(this.lifeRecoveryInterval);
+        this.lifeRecoveryInterval = null;
+      }
+      if (this.lifeSyncInterval) {
+        clearInterval(this.lifeSyncInterval);
+        this.lifeSyncInterval = null;
+      }
+    },
+
+    initializeLifeRecovery() {
+      if (!this.playerId) {
+        this.stopLifeRecoveryTicker();
+        this.lifeRecoveryCountdownLabel = '';
+        this.lifeNextRecoverAtMs = null;
+        return;
+      }
+      this.syncLivesFromServer(true);
+      this.startLifeRecoveryTicker();
+    },
+
+    consumeLifeForGameStart() {
+      return new Promise((resolve) => {
+        if (!this.playerId) {
+          resolve(false);
+          return;
+        }
+        this.consumeLife(
+          this.playerId,
+          (lifeData) => {
+            this.applyLivesPayload(lifeData);
+            this.startLifeRecoveryTicker();
+            resolve(true);
+          },
+          (error) => {
+            console.error('Failed to consume life:', error);
+            uni.showToast({ title: error || '体力不足', icon: 'none' });
+            resolve(false);
+          }
+        );
+      });
     },
 
     handleAuthSubmit() {
@@ -240,11 +380,13 @@ export default {
         (data) => {
           this.playerId = data.player_id;
           this.playerName = data.player_name || this.username;
-          this.lives = data.lives || 5;
+          const initLives = Number(data.lives);
+          this.lives = Number.isFinite(initLives) ? Math.max(0, Math.min(MAX_LIVES, initLives)) : MAX_LIVES;
 
           uni.setStorageSync('playerId', this.playerId);
           uni.setStorageSync('playerName', this.playerName);
           uni.setStorageSync('lives', this.lives);
+          this.initializeLifeRecovery();
 
           this.authSuccess = '注册成功!';
           setTimeout(() => this.goHome(), 1000);
@@ -279,13 +421,16 @@ export default {
           // Fetch lives after login
           this.fetchLives(
             this.playerId,
-            (lives) => {
-              this.lives = lives;
-              uni.setStorageSync('lives', lives);
+            (lifeData) => {
+              this.applyLivesPayload(lifeData);
+              this.initializeLifeRecovery();
             },
             () => {
               // Fallback to default
-              this.lives = 5;
+              this.lives = MAX_LIVES;
+              this.lifeNextRecoverAtMs = null;
+              this.lifeRecoveryCountdownLabel = '';
+              this.initializeLifeRecovery();
             }
           );
 
@@ -311,6 +456,7 @@ export default {
       this.authError = '';
       this.username = '';
       this.password = '';
+      this.syncLivesFromServer(true);
       this.gameStatus = 'home';
     },
 
@@ -439,6 +585,9 @@ export default {
             this.authError = '';
             this.authSuccess = '';
             this.authMode = 'login';
+            this.stopLifeRecoveryTicker();
+            this.lifeNextRecoverAtMs = null;
+            this.lifeRecoveryCountdownLabel = '';
 
             // Return to auth screen
             this.gameStatus = 'auth';
@@ -541,6 +690,7 @@ export default {
     // Game
     async startGame(time) {
       if (this.startingGame) return;
+      await this.syncLivesFromServer(true);
 
       // Check if player has lives
       if (this.lives <= 0) {
@@ -555,14 +705,17 @@ export default {
 
       this.startingGame = true;
 
-      this.lastTime = time;
-      this.timeLeft = time;
-      this.score = 0;
-      this.isLocked = false;
-      this.currentWordId = null;
-      this.currentWordSource = '';
-
       try {
+        const consumed = await this.consumeLifeForGameStart();
+        if (!consumed) return;
+
+        this.lastTime = time;
+        this.timeLeft = time;
+        this.score = 0;
+        this.isLocked = false;
+        this.currentWordId = null;
+        this.currentWordSource = '';
+
         this.wordList = await this.buildGameWords(this.selectedCategory, time);
 
         if (!this.wordList.length) {
@@ -609,20 +762,6 @@ export default {
 
     endGame() {
       this.stopAll();
-
-      // Consume one life
-      if (this.playerId && this.lives > 0) {
-        this.consumeLife(
-          this.playerId,
-          (remainingLives) => {
-            this.lives = remainingLives;
-            uni.setStorageSync('lives', remainingLives);
-          },
-          (error) => {
-            console.error('Failed to consume life:', error);
-          }
-        );
-      }
 
       // Save game record locally
       this.saveGameRecord(this.selectedCategory, this.score);
