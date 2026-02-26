@@ -8,6 +8,8 @@ Cloudflare Worker backend for the SayIt GuessIt GetRich game.
 |--------|----------|-------------|
 | POST | `/api/register` | Create new account (username, password) |
 | POST | `/api/login` | Login with username and password |
+| GET | `/api/lives` | Get current lives and next recovery countdown |
+| POST | `/api/lives/consume` | Consume 1 life and start recovery timer |
 | GET | `/api/history` | Get user's score history (requires X-Player-ID header) |
 | POST | `/api/score` | Submit a score (requires X-Player-ID header) |
 | GET | `/api/words` | Get random word bank |
@@ -24,6 +26,8 @@ create table players (
   username text unique not null,
   password_hash text not null,
   player_name text,
+  lives integer not null default 5,
+  life_recovery_queue jsonb not null default '[]'::jsonb,
   created_at timestamp default now()
 );
 ```
