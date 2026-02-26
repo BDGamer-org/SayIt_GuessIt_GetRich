@@ -1,5 +1,12 @@
-const MAX_LIVES = 5
+const RECOVERY_CAP_LIVES = 5
+const MAX_STORED_LIVES = 999999
 const LIFE_RECOVERY_MS = 30 * 60 * 1000
+const RECHARGE_PLAN_LIFE_GAIN = {
+  p1: 5,
+  p6: 40,
+  p12: 120,
+}
+const UNSUPPORTED_RECHARGE_PLANS = new Set(['p20_month', 'p68_permanent'])
 
 const getSupabaseHeaders = (env, useServiceKey = false) => {
   const token = useServiceKey ? env.SUPABASE_SERVICE_KEY : env.SUPABASE_ANON_KEY
@@ -11,8 +18,8 @@ const getSupabaseHeaders = (env, useServiceKey = false) => {
 
 const clampLives = (value) => {
   const lives = Number(value)
-  if (!Number.isFinite(lives)) return MAX_LIVES
-  return Math.max(0, Math.min(MAX_LIVES, lives))
+  if (!Number.isFinite(lives)) return RECOVERY_CAP_LIVES
+  return Math.max(0, Math.min(MAX_STORED_LIVES, Math.floor(lives)))
 }
 
 const normalizeQueue = (rawQueue) => {
@@ -46,12 +53,14 @@ const applyLifeRecoveryState = (rawLives, rawQueue, nowMs = Date.now()) => {
   const originalLives = lives
   const originalQueue = [...queue]
 
-  while (queue.length && nowMs - queue[0] >= LIFE_RECOVERY_MS && lives < MAX_LIVES) {
+  while (queue.length && nowMs - queue[0] >= LIFE_RECOVERY_MS && lives < RECOVERY_CAP_LIVES) {
     queue.shift()
     lives += 1
   }
 
-  const missingLives = Math.max(0, MAX_LIVES - lives)
+  const missingLives = lives >= RECOVERY_CAP_LIVES
+    ? 0
+    : Math.max(0, RECOVERY_CAP_LIVES - lives)
   if (missingLives === 0) {
     queue = []
   } else {
@@ -66,7 +75,7 @@ const applyLifeRecoveryState = (rawLives, rawQueue, nowMs = Date.now()) => {
   return {
     lives,
     queue,
-    nextRecoverAtMs: queue.length > 0 && lives < MAX_LIVES ? queue[0] + LIFE_RECOVERY_MS : null,
+    nextRecoverAtMs: queue.length > 0 && lives < RECOVERY_CAP_LIVES ? queue[0] + LIFE_RECOVERY_MS : null,
     changed: lives !== originalLives || !isSameQueue(queue, originalQueue)
   }
 }
@@ -78,7 +87,8 @@ const buildLivesResponse = (state, nowMs = Date.now()) => {
 
   return {
     lives: state.lives,
-    max_lives: MAX_LIVES,
+    max_lives: RECOVERY_CAP_LIVES,
+    recovery_cap_lives: RECOVERY_CAP_LIVES,
     next_recover_at: state.nextRecoverAtMs ? new Date(state.nextRecoverAtMs).toISOString() : null,
     next_recover_in_seconds: remainSeconds
   }
@@ -355,10 +365,64 @@ export default {
           })
         }
 
-        const consumedState = applyLifeRecoveryState(state.lives - 1, [...state.queue, nowMs], nowMs)
+        const nextLives = state.lives - 1
+        const nextQueue = nextLives < RECOVERY_CAP_LIVES
+          ? [...state.queue, nowMs]
+          : [...state.queue]
+        const consumedState = applyLifeRecoveryState(nextLives, nextQueue, nowMs)
         await persistPlayerLifeState(env, playerId, consumedState)
 
         return new Response(JSON.stringify(buildLivesResponse(consumedState, nowMs)), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      // Recharge lives
+      if (path === '/api/lives/recharge' && request.method === 'POST') {
+        const playerId = request.headers.get('X-Player-ID')
+
+        if (!playerId) {
+          return new Response(JSON.stringify({ error: 'X-Player-ID header required' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        let body = {}
+        try {
+          body = await request.json()
+        } catch (e) {
+          body = {}
+        }
+
+        const planId = typeof body.plan_id === 'string' ? body.plan_id : ''
+        const amount = RECHARGE_PLAN_LIFE_GAIN[planId]
+
+        if (UNSUPPORTED_RECHARGE_PLANS.has(planId)) {
+          return new Response(JSON.stringify({ error: '该充值方案暂未开通' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        if (!Number.isFinite(amount) || amount <= 0) {
+          return new Response(JSON.stringify({ error: '无效充值方案' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+
+        const nowMs = Date.now()
+        const player = await fetchPlayerLifeRecord(env, playerId)
+        const state = applyLifeRecoveryState(player.lives, player.life_recovery_queue, nowMs)
+        const rechargedState = applyLifeRecoveryState(state.lives + amount, state.queue, nowMs)
+        await persistPlayerLifeState(env, playerId, rechargedState)
+
+        return new Response(JSON.stringify({
+          plan_id: planId || null,
+          amount,
+          ...buildLivesResponse(rechargedState, nowMs)
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       }
