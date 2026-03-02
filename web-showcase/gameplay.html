@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>你说我猜马上发财 - 展阅页</title>
+  <style>
+    :root {
+      --primary: #c23a3a;
+      --primary-wash: rgba(194, 58, 58, 0.2);
+      --ink: #1a1a1a;
+      --ink-light: #555;
+      --ink-wash: rgba(26, 26, 26, 0.1);
+      --bg-paper: #f4f0e6;
+      --glass-bg: rgba(244, 240, 230, 0.86);
+      --glass-border: rgba(26, 26, 26, 0.3);
+      --font-cny: 'NanBeiSong', 'Long Cang', 'STKaiti', 'KaiTi', serif;
+      --font-tech: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      --mountain-move-x: 0px;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-tech);
+      color: var(--ink);
+      background-color: var(--bg-paper);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f4f0e6' surfaceScale='2'%3E%3CfeDistantLight azimuth='45' elevation='60'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='0.5'/%3E%3C/svg%3E");
+      overflow-x: hidden;
+    }
+
+    .parallax-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      background-size: cover;
+      background-position: center bottom;
+      background-repeat: no-repeat;
+    }
+
+    .layer-mountains {
+      background-image: url('./mountain.png');
+      opacity: 0.85;
+      mix-blend-mode: multiply;
+      transform: translateX(var(--mountain-move-x));
+      transition: transform 0.1s ease-out;
+    }
+
+    .layer-foreground {
+      background: url('./tree.png');
+      background-size: 80%;
+      background-position: 236% 50%;
+      background-repeat: no-repeat;
+    }
+
+    .page {
+      width: min(980px, 90vw);
+      margin: 90px auto 50px;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      box-shadow: 0 12px 35px rgba(26, 26, 26, 0.12);
+      padding: 42px 34px;
+      box-sizing: border-box;
+    }
+
+    h1, h2 {
+      font-family: var(--font-cny);
+      letter-spacing: 2px;
+      margin-top: 0;
+      color: var(--ink);
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 54px);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      margin-top: 30px;
+      font-size: 28px;
+    }
+
+    p, li {
+      font-family: var(--font-cny);
+      font-size: 18px;
+      line-height: 1.9;
+      color: var(--ink-light);
+    }
+
+    ul, ol {
+      margin: 10px 0 0;
+      padding-left: 24px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-family: var(--font-cny);
+      letter-spacing: 1px;
+      background: var(--primary-wash);
+      margin-bottom: 18px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 34px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 12px 26px;
+      border: 2px solid var(--primary);
+      color: var(--bg-paper);
+      background: var(--primary);
+      font-family: var(--font-cny);
+      font-size: 18px;
+      transition: all 0.25s ease;
+      border-radius: 4px;
+    }
+
+    .btn:hover {
+      background: var(--bg-paper);
+      color: var(--primary);
+    }
+
+    .btn-secondary {
+      border-color: var(--glass-border);
+      color: var(--ink);
+      background: rgba(244, 240, 230, 0.72);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+      background: rgba(244, 240, 230, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <div class="parallax-layer layer-mountains"></div>
+  <div class="parallax-layer layer-foreground"></div>
+
+  <main class="page">
+    <span class="tag">展阅权限已开启</span>
+    <h1>你说我猜马上发财</h1>
+    <p>这是一个多人同乐的描述猜词游戏。核心目标很简单：在限定时间里，用语言、比喻把词解释给队友，让队友尽快猜中并累计得分。</p>
+
+    <h2>核心玩法</h2>
+    <ol>
+      <li>至少两位玩家参与，一人手持手机，一人准备描述屏幕给出的内容，两人可以轮流担任“描述者”。</li>
+      <li>系统随机给描述者一个词条，描述者不能直接说出词本身或同音字。</li>
+      <li>玩家在倒计时内答题，猜中得分，手向下翻转屏幕，得分加一，跳过则向上反转手机，不得分。违规则该词作废。</li>
+      <li>倒计时结束后统计总分，可以轮流进行，最高分者胜出。</li>
+    </ol>
+
+    <h2>常用模式</h2>
+    <ul>
+      目前已开放：
+      <li>中华成语：词条偏国风和语义联想，考验临场表达。</li>
+      <li>日常生活：围绕生活场景，门槛低，适合新手破冰。</li>
+      敬请期待：
+      <li>明星艺人</li>
+      <li>城市猜猜</li>
+      <li>影视作品</li>
+    </ul>
+
+    <h2>一局流程示例</h2>
+    <p>选择游戏时长，以60秒为例。描述者在60秒内依次连续解释多个词条。每猜中一个，向下翻转手机，则切换为下一个词条。无法正确回答的词语则跳过处理，向上翻转手机，不得分。尽量保持节奏。回合结束后记录本轮得分并交换角色。</p>
+
+    <h2>快速上手建议</h2>
+    <ul>
+      <li>描述优先说“用途 + 场景 + 特征”，避免绕圈太久。</li>
+      <li>队友优先抛出高频关键词，先缩小范围再精确命中。</li>
+      <li>若遇到卡词，立刻跳过，保证总命中数最大化。</li>
+    </ul>
+
+    <div class="cta-row">
+      <a class="btn" href="./index.html#games">返回游戏列表</a>
+      <a class="btn btn-secondary" href="./index.html">回到首页</a>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('mousemove', (e) => {
+      const xRatio = e.clientX / window.innerWidth;
+      const moveX = (xRatio - 0.5) * -60;
+      document.documentElement.style.setProperty('--mountain-move-x', `${moveX}px`);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BDGamer - 赛博水墨 | 笔墨乾坤</title>
+  <style>
+    :root {
+      --primary: #c23a3a;
+      --primary-wash: rgba(194, 58, 58, 0.2);
+      --ink: #1a1a1a;
+      --ink-light: #555;
+      --ink-wash: rgba(26, 26, 26, 0.1);
+      --bg-paper: #f4f0e6;
+      --glass-bg: rgba(244, 240, 230, 0.85);
+      --glass-border: rgba(26, 26, 26, 0.3);
+      --text-main: var(--ink);
+      --text-muted: var(--ink-light);
+      --font-cny: 'NanBeiSong', 'Long Cang', 'STKaiti', 'KaiTi', serif;
+      --font-tech: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      --mountain-move-x: 0px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-tech);
+      background-color: var(--bg-paper);
+      color: var(--text-main);
+      overflow-x: hidden;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f4f0e6' surfaceScale='2'%3E%3CfeDistantLight azimuth='45' elevation='60'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='0.5'/%3E%3C/svg%3E");
+    }
+
+    .parallax-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+      background-size: cover;
+      background-position: center bottom;
+      background-repeat: no-repeat;
+    }
+
+    .layer-mountains {
+        background-image: url('./mountain.png');
+        background-size: cover;
+        background-position: center bottom;
+        opacity: 0.85;
+        mix-blend-mode: multiply; 
+        transform: translateX(var(--mountain-move-x));
+        transition: transform 0.1s ease-out;
+    }
+
+    .layer-foreground {
+        background: url('./tree.png');
+        background-size: 80%; 
+        background-position: 236% 50%;
+        background-repeat: no-repeat;
+        z-index: -1;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5%;
+      box-sizing: border-box;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(26, 26, 26, 0.05);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .seal {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--primary);
+      color: var(--bg-paper);
+      background-color: var(--primary);
+      font-family: var(--font-cny);
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+      mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E");
+    }
+
+    .logo-text {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: var(--primary);
+      font-family: var(--font-cny);
+      text-shadow: 1px 1px 2px rgba(26, 26, 26, 0.2);
+      -webkit-text-stroke: 0.5px var(--primary);
+    }
+
+    .nav-links a {
+      color: var(--text-main);
+      text-decoration: none;
+      margin-left: 30px;
+      font-size: 15px;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+      position: relative;
+      font-family: var(--font-cny);
+      font-weight: bold;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+    
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    section {
+      min-height: 100vh;
+      padding: 120px 5% 50px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .section-title {
+      font-family: var(--font-cny);
+      font-size: 42px;
+      margin-bottom: 60px;
+      font-weight: normal;
+      letter-spacing: 4px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .section-title::before, .section-title::after {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 2px;
+      background: var(--ink);
+      border-radius: 2px;
+      filter: url(#paper);
+    }
+
+    #home {
+      justify-content: center;
+      text-align: center;
+    }
+
+    .vertical-decor {
+      position: absolute;
+      left: 5%;
+      top: 30%;
+      writing-mode: vertical-rl;
+      font-family: var(--font-cny);
+      font-size: 16px;
+      letter-spacing: 6px;
+      color: var(--text-muted);
+      opacity: 0.8;
+      border-left: 2px solid var(--glass-border);
+      padding-left: 15px;
+    }
+
+    .hero-title {
+      font-family: var(--font-cny);
+      font-size: clamp(48px, 7vw, 90px);
+      margin: 0 0 20px;
+      line-height: 1.2;
+      color: var(--text-main);
+      text-shadow: 2px 2px 4px rgba(26, 26, 26, 0.1);
+    }
+
+    .hero-subtitle {
+      font-size: 20px;
+      font-family: var(--font-cny);
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 50px;
+      line-height: 1.8;
+      letter-spacing: 1px;
+    }
+
+    .btn-cyber {
+      position: relative;
+      padding: 16px 48px;
+      font-size: 20px;
+      font-weight: bold;
+      font-family: var(--font-cny);
+      color: var(--bg-paper);
+      background: var(--primary);
+      border: 2px solid var(--primary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.2), 0 5px 15px var(--primary-wash);
+      border-radius: 4px;
+    }
+
+    .btn-cyber::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.6s;
+    }
+
+    .btn-cyber:hover {
+      background: var(--bg-paper);
+      color: var(--primary);
+      box-shadow: inset 0 0 10px var(--primary-wash), 0 5px 20px var(--primary-wash);
+    }
+
+    .btn-cyber:hover::before {
+      left: 100%;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 40px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .cyber-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 2px solid var(--glass-border);
+      padding: 40px 30px;
+      position: relative;
+      transition: transform 0.4s, border-color 0.4s, box-shadow 0.4s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.03' numOctaves='3' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f4f0e6' surfaceScale='1'%3E%3CfeDistantLight azimuth='45' elevation='50'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='0.3'/%3E%3C/svg%3E");
+    }
+
+    .cyber-card::before {
+      content: '';
+      position: absolute;
+      top: -2px; left: -2px;
+      width: 30px; height: 30px;
+      border-top: 3px solid var(--ink);
+      border-left: 3px solid var(--ink);
+      opacity: 0;
+      transition: opacity 0.4s;
+      filter: url(#paper);
+    }
+
+    .cyber-card::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; right: -2px;
+      width: 30px; height: 30px;
+      border-bottom: 3px solid var(--ink);
+      border-right: 3px solid var(--ink);
+      opacity: 0;
+      transition: opacity 0.4s;
+      filter: url(#paper);
+    }
+
+    .cyber-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--ink);
+      box-shadow: 0 10px 30px rgba(26, 26, 26, 0.15), 0 0 20px var(--ink-wash);
+    }
+
+    .cyber-card:hover::before, .cyber-card:hover::after {
+      opacity: 1;
+    }
+
+    .game-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 14px;
+      font-family: var(--font-cny);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      background: var(--primary-wash);
+    }
+
+    .game-title {
+      font-family: var(--font-cny);
+      font-size: 30px;
+      margin: 0 0 15px;
+      color: var(--text-main);
+    }
+
+    .game-desc {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 30px;
+      font-family: var(--font-cny);
+    }
+
+    .game-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 16px;
+      font-family: var(--font-cny);
+      font-weight: bold;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: gap 0.3s;
+    }
+    
+    .game-link:hover {
+      gap: 10px;
+    }
+
+    .policy-container {
+      width: 100%;
+      max-width: 800px;
+      background: var(--glass-bg);
+      border: 2px solid var(--glass-border);
+      padding: 50px;
+      color: var(--text-main);
+      font-size: 16px;
+      line-height: 2;
+      max-height: 60vh;
+      overflow-y: auto;
+      font-family: var(--font-cny);
+      box-shadow: inset 0 0 50px rgba(26, 26, 26, 0.05);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 800 800'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5' result='noise'/%3E%3CfeDiffuseLighting in='noise' lighting-color='%23f4f0e6' surfaceScale='2'%3E%3CfeDistantLight azimuth='45' elevation='60'/%3E%3C/feDiffuseLighting%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='0.3'/%3E%3C/svg%3E");
+      border-top: 8px solid var(--ink);
+      border-bottom: 8px solid var(--ink);
+    }
+
+    .policy-container h3 {
+      font-family: var(--font-cny);
+      color: var(--primary);
+      font-size: 24px;
+      border-bottom: 2px dashed var(--glass-border);
+      padding-bottom: 15px;
+      margin-top: 0;
+      text-align: center;
+    }
+    
+    .policy-container h4 {
+      color: var(--ink);
+      margin-top: 30px;
+      font-size: 18px;
+    }
+
+    .policy-container::-webkit-scrollbar { width: 6px; }
+    .policy-container::-webkit-scrollbar-thumb { 
+      background: var(--ink-light); 
+      border-radius: 3px;
+    }
+    .policy-container::-webkit-scrollbar-track {
+      background: var(--ink-wash);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+      letter-spacing: 2px;
+      border-top: 1px solid var(--glass-border);
+      font-family: var(--font-cny);
+      background: var(--glass-bg);
+    }
+
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .svg-filters { display: none; }
+  </style>
+</head>
+<body>
+  
+  <svg class="svg-filters">
+    <filter id="paper">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise"/>
+      <feDiffuseLighting in="noise" lighting-color="#f4f0e6" surfaceScale="2">
+        <feDistantLight azimuth="45" elevation="60"/>
+      </feDiffuseLighting>
+    </filter>
+  </svg>
+
+  <div class="parallax-layer layer-mountains"></div>
+  <div class="parallax-layer layer-foreground"></div>
+
+  <nav>
+    <div class="logo-container">
+      <div class="seal">BD</div>
+      <div class="logo-text">GAMER</div>
+    </div>
+    <div class="nav-links">
+      <a href="#home">首页</a>
+      <a href="#games">旗下游戏</a>
+      <a href="#privacy">隐私政策</a>
+    </div>
+  </nav>
+
+  <section id="home">
+    <div class="vertical-decor">笔墨乾坤 · 数字画境</div>
+    <h1 class="hero-title fade-up">回归纯粹的<br>游戏乐趣</h1>
+    <p class="hero-subtitle fade-up" style="transition-delay: 0.1s;">
+      BDGamer 致力于打造别具一格的独立游戏。我们相信，最好的互动不仅在屏幕里，更在人与人之间。
+    </p>
+    <a href="#games" class="btn-cyber fade-up" style="transition-delay: 0.2s;">启动画境</a>
+  </section>
+
+  <section id="games">
+    <h2 class="section-title fade-up">旗下游戏</h2>
+    <div class="games-grid">
+      
+      <div class="cyber-card fade-up">
+        <span class="game-badge">已展卷 (v1.0)</span>
+        <h3 class="game-title">你说我猜马上发财</h3>
+        <p class="game-desc">
+          一款融入古风手绘UI与现代社交属性的聚会破冰终端。搭载“成语接龙”，“日常生活”，“影视猜谜”等欢乐的你描述我猜测的模块。独特的屏风式界面与丝滑的滑动反馈，重构线下派对体验。
+        </p>
+        <a href="./gameplay.html" class="game-link">获取展阅权限 <span>&gt;</span></a>
+      </div>
+
+      <div class="cyber-card fade-up" style="transition-delay: 0.1s;">
+        <span class="game-badge" style="border-color: var(--text-muted); color: var(--text-muted); background: var(--ink-wash);">未解封画轴</span>
+        <h3 class="game-title">AI展示生活</h3>
+        <p class="game-desc">
+          基于最新引擎研发的颠覆性视频模式。该计划正处于高度保密的绘测阶段，预计将彻底颠覆视频产出的范式。
+        </p>
+        <span class="game-link" style="color: var(--text-muted);">等待启封...</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="privacy">
+    <h2 class="section-title fade-up">相关契约</h2>
+    <div class="policy-container fade-up">
+      <h3>BDGamer 数据安全与隐私契约</h3>
+      <p>契约版本：v1.0 | 最近同步：庚子年</p>
+      <p>欢迎接入 BDGamer 终端网络。我们在构建《你说我猜马上发财》等虚拟体验时，始终将您的数据主权与隐私安全置于最高优先级。</p>
+      
+      <h4>[壹] 数据采集边界</h4>
+      <p>为确保底层通讯与基础功能（如生命值状态存档）的运转，我们仅在您的明确授权下，建立必要的用户标识。我们拒绝任何非必要的数据沉淀。</p>
+      
+      <!-- <h4>[贰] 能量交换（支付）协议</h4>
+      <p>在本终端内发生的一切充值与能量交换动作，均由具有顶级加密标准的第三方安全节点（如微信支付、Stripe 等）直接处理。您的核心金融凭证将不会经过我们的服务器。</p> -->
+
+      <h4>[贰] 绝对中立承诺</h4>
+      <p>您的游戏行为数据与社交数据将被严格封装，我们承诺绝不向任何外部商业矩阵出售、交易您的个人扫描画像。</p>
+    </div>
+  </section>
+
+  <footer>
+    SYSTEM &copy; 2026 BDGamer Studio. ALL RIGHTS RESERVED. | BDGamer工作室
+  </footer>
+
+  <script>
+    document.addEventListener('mousemove', (e) => {
+      const xRatio = e.clientX / window.innerWidth;
+      const moveX = (xRatio - 0.5) * -60; 
+      document.documentElement.style.setProperty('--mountain-move-x', `${moveX}px`);
+    });
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.15
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); 
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-up').forEach(element => {
+      observer.observe(element);
+    });
+  </script>
+</body>
+</html>
