@@ -911,9 +911,8 @@ export default {
         this.score++;
       }
 
-      setTimeout(() => {
-        this.nextWord();
-      }, 800);
+      // Switch word immediately after vibration is triggered.
+      this.nextWord();
     },
 
     // Local History
