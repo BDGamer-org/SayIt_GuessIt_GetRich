@@ -493,70 +493,14 @@ export default {
     },
 
     handleShare() {
-      const shareData = {
-        title: '你说我猜马上发财',
-        summary: '来和我一起玩你说我猜，看看谁更懂你！',
-        href: 'https://github.com/BDGamer-org/SayIt_GuessIt_GetRich',
-        imageUrl: '/static/logo.png'
-      };
-      const fallbackCopy = () => {
-        uni.setClipboardData({
-          data: shareData.href,
-          success: () => {
-            uni.showToast({ title: '链接已复制，快去分享给好友', icon: 'none' });
-          }
-        });
-      };
-
-      // #ifdef H5
-      if (typeof navigator !== 'undefined' && navigator.share) {
-        navigator.share({
-          title: shareData.title,
-          text: shareData.summary,
-          url: shareData.href
-        }).catch(() => {});
-        return;
-      }
-      // #endif
-
-      if (typeof uni.getProvider !== 'function' || typeof uni.share !== 'function') {
-        fallbackCopy();
-        return;
-      }
-
-      uni.getProvider({
-        service: 'share',
-        success: ({ provider = [] }) => {
-          const providers = provider.filter(Boolean);
-          if (!providers.length) {
-            fallbackCopy();
-            return;
-          }
-
-          uni.showActionSheet({
-            itemList: providers.map((item) => this.getShareProviderLabel(item)),
-            success: ({ tapIndex }) => {
-              const selected = providers[tapIndex];
-              uni.share({
-                provider: selected,
-                type: 0,
-                scene: selected === 'weixin' ? 'WXSceneSession' : undefined,
-                href: shareData.href,
-                title: shareData.title,
-                summary: shareData.summary,
-                imageUrl: shareData.imageUrl,
-                success: () => {
-                  uni.showToast({ title: '分享成功', icon: 'none' });
-                },
-                fail: () => {
-                  fallbackCopy();
-                }
-              });
-            }
-          });
+      const shareUrl = 'https://bdgamer-org.github.io/SayIt_GuessIt_GetRich/index.html';
+      uni.setClipboardData({
+        data: shareUrl,
+        success: () => {
+          uni.showToast({ title: '链接已复制，请到微信/QQ粘贴分享', icon: 'none' });
         },
         fail: () => {
-          fallbackCopy();
+          uni.showToast({ title: '复制失败，请稍后重试', icon: 'none' });
         }
       });
     },
