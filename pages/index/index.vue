@@ -482,7 +482,7 @@ export default {
     },
 
     toggleSound() {
-      uni.showToast({ title: '声音开关', icon: 'none' });
+      uni.showToast({ title: '功能正在开发中', icon: 'none' });
     },
 
     getShareProviderLabel(provider) {
@@ -510,7 +510,7 @@ export default {
     },
 
     openRecharge() {
-      this.gameStatus = 'recharge';
+      uni.showToast({ title: '功能正在开发中', icon: 'none' });
     },
 
     closeRecharge() {
