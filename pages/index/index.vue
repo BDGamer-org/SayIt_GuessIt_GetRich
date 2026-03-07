@@ -537,7 +537,6 @@ export default {
           this.openStripeCheckout(checkoutUrl);
           this.closeRecharge();
 
-          // #ifndef H5
           uni.showModal({
             title: '支付提示',
             content: '请在 Stripe 支付页完成支付，回到应用后点击“我已支付”刷新体力。',
@@ -903,7 +902,6 @@ export default {
 </script>
 
 <style>
-/* Grid Background */
 .container {
   --edge-gap: 20px;
   --edge-gap-wide: 40px;
@@ -917,12 +915,19 @@ export default {
   --sketch-btn-font-size: 16px;
   --sketch-btn-pad-y: 12px;
   --sketch-btn-pad-x: 28px;
-  --energy-top: 20px;
+  --menu-top: 36px;
+  --energy-align-offset: 22px;
   --energy-left: 40px;
-  --energy-pill-padding-y: 6px;
-  --energy-pill-padding-x: 12px;
-  --energy-icon-size: 18px;
-  --energy-count-size: 20px;
+  --energy-pill-padding-y: 10px;
+  --energy-pill-padding-x: 15px;
+  --energy-pill-height: 66px;
+  --energy-circle-size: 48px;
+  --energy-center-min-width: 102px;
+  --energy-overlap: 16px;
+  --energy-border-width: 3px;
+  --energy-countdown-size: 14px;
+  --energy-icon-size: 24px;
+  --energy-count-size: 26px;
   --energy-plus-size: 22px;
   --menu-right: 36px;
   --menu-bottom: 60px;
@@ -967,12 +972,19 @@ export default {
   --sketch-btn-font-size: 15px;
   --sketch-btn-pad-y: 10px;
   --sketch-btn-pad-x: 20px;
-  --energy-top: 14px;
+  --menu-top: 27px;
+  --energy-align-offset: 18px;
   --energy-left: 24px;
-  --energy-pill-padding-y: 5px;
-  --energy-pill-padding-x: 10px;
-  --energy-icon-size: 16px;
-  --energy-count-size: 18px;
+  --energy-pill-padding-y: 8px;
+  --energy-pill-padding-x: 12px;
+  --energy-pill-height: 58px;
+  --energy-circle-size: 42px;
+  --energy-center-min-width: 90px;
+  --energy-overlap: 14px;
+  --energy-border-width: 2px;
+  --energy-countdown-size: 12px;
+  --energy-icon-size: 22px;
+  --energy-count-size: 24px;
   --energy-plus-size: 20px;
   --menu-right: 28px;
   --menu-bottom: 50px;
@@ -1006,6 +1018,14 @@ export default {
   --home-card-height: 150px;
   --home-card-title-size: 50px;
   --home-card-gap: 26px;
+  --menu-top: 38px;
+  --energy-align-offset: 24px;
+  --energy-pill-height: 70px;
+  --energy-circle-size: 52px;
+  --energy-center-min-width: 108px;
+  --energy-overlap: 17px;
+  --energy-border-width: 3px;
+  --energy-countdown-size: 15px;
   --game-word-font-size: 60px;
   --game-word-min-height: 220px;
   --game-info-value-size: 34px;

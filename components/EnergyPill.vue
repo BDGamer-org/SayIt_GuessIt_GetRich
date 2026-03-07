@@ -29,35 +29,35 @@ export default {
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 48rpx;
+  height: var(--energy-pill-height, 66px);
   position: relative;
 }
 
 .circle-btn {
-  width: 34rpx;
-  height: 34rpx;
+  width: var(--energy-circle-size, 48px);
+  height: var(--energy-circle-size, 48px);
   background-color: #77bae6d0;
-  border: 3rpx solid #000000;
+  border: var(--energy-border-width, 3px) solid #000000;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  box-shadow: 1rpx 1rpx 0px rgba(0,0,0,0.2);
+  box-shadow: 1px 1px 0px rgba(0,0,0,0.2);
   flex-shrink: 0;
 }
 
 .left-btn {
-  margin-right: -20rpx;
+  margin-right: calc(var(--energy-overlap, 16px) * -1);
 }
 
 .right-btn {
-  margin-left: -20rpx;
+  margin-left: calc(var(--energy-overlap, 16px) * -1);
 }
 
 .icon-img {
-  width: 20rpx;
-  height: 20rpx;
+  width: var(--energy-icon-size, 24px);
+  height: var(--energy-icon-size, 24px);
 }
 
 .plus-icon {
@@ -70,21 +70,41 @@ export default {
 }
 
 .center-tube {
-  height: 34rpx;
-  min-width: 56rpx;
-  padding: 0 16rpx;
+  height: var(--energy-circle-size, 48px);
+  min-width: var(--energy-center-min-width, 102px);
+  padding: var(--energy-pill-padding-y, 10px)
+    calc(var(--energy-pill-padding-x, 15px) + var(--energy-overlap, 16px));
   background-color: #FFFFFF;
-  border-top: 3rpx solid #000000;
-  border-bottom: 3rpx solid #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.center-tube::before,
+.center-tube::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--energy-tube-line-extend, 4px) * -1);
+  right: calc(var(--energy-tube-line-extend, 4px) * -1);
+  height: var(--energy-border-width, 3px);
+  background-color: #000000;
+  pointer-events: none;
+}
+
+.center-tube::before {
+  top: calc(var(--energy-tube-line-offset, 2px) * -1);
+}
+
+.center-tube::after {
+  bottom: calc(var(--energy-tube-line-offset, 2px) * -1);
 }
 
 .energy-count {
   font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
-  font-size: 22rpx;
+  font-size: var(--energy-count-size, 26px);
   color: #333;
   font-weight: 900;
 }

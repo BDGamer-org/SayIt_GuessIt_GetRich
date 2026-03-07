@@ -195,26 +195,31 @@ export default {
 
 .energy-pill-wrapper {
   position: absolute;
-  top: 24rpx;
-  left: 50rpx;
+  top: calc(
+    env(safe-area-inset-top, 0px) + var(--menu-top, 36px) +
+    (var(--menu-icon-size, 44px) - var(--energy-pill-height, 66px)) / 2 +
+    var(--energy-align-offset, 18px)
+  );
+  left: max(var(--energy-left, 24px), calc(env(safe-area-inset-left, 0px) + 12px));
   z-index: 10;
   display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 10rpx;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .life-countdown-wrap {
   display: flex;
   flex-direction: row;
   align-items: baseline;
-  gap: 6rpx;
+  gap: 6px;
   margin-left: 0;
+  margin-top: 4px;
 }
 
 .life-countdown {
   font-family: 'NanBeiSong', 'PingFang SC', sans-serif;
-  font-size: 18rpx;
+  font-size: var(--energy-countdown-size, 14px);
   font-weight: 900;
   color: #333;
   line-height: 1;
@@ -222,7 +227,7 @@ export default {
 
 .life-countdown-hint {
   font-family: 'Long Cang', 'PingFang SC', sans-serif;
-  font-size: 18rpx;
+  font-size: var(--energy-countdown-size, 14px);
   color: #333;
   line-height: 1;
 }

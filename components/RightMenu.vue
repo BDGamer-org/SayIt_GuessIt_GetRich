@@ -16,8 +16,8 @@ export default {
 <style scoped>
 .right-menu {
   position: absolute;
-  top: 24rpx;
-  right: 7%;
+  top: calc(env(safe-area-inset-top, 0px) + var(--menu-top, 36px));
+  right: max(var(--menu-right, 36px), calc(env(safe-area-inset-right, 0px) + 12px));
   display: flex;
   flex-direction: row;
   gap: var(--menu-gap, 25rpx);
