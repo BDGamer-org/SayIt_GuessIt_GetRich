@@ -548,7 +548,6 @@ export default {
               }
             }
           });
-          // #endif
         },
         (error) => {
           uni.showToast({ title: error || '创建支付失败', icon: 'none' });
