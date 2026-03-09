@@ -510,7 +510,7 @@ export default {
     },
 
     openRecharge() {
-      uni.showToast({ title: '功能正在开发中', icon: 'none' });
+      this.gameStatus = 'recharge';
     },
 
     closeRecharge() {
