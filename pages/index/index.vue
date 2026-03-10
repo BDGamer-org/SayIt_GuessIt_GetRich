@@ -22,6 +22,7 @@
       @show-history="showUserHistory"
       @toggle-sound="toggleSound"
       @add-energy="openRecharge"
+      @play-click-sound="playClickSound"
       @share="handleShare"
       @open-settings="openSettings"
       @logout="handleLogout"
@@ -94,6 +95,8 @@ const LIFE_RECOVERY_CAP = 5;
 const MAX_CLIENT_LIVES = 999999;
 const LIFE_SYNC_INTERVAL_MS = 15000;
 const LIFE_COUNTDOWN_TICK_MS = 1000;
+const SOUND_ENABLED_STORAGE_KEY = 'soundEnabled';
+const CLICK_SFX_SRC = '/static/audio/button.aiff';
 
 export default {
   components: {
@@ -174,7 +177,9 @@ export default {
 
       // History
       userHistory: [],
-      historyCategory: 'idiom'
+      historyCategory: 'idiom',
+      soundEnabled: false,
+      clickAudio: null
     };
   },
 
@@ -187,6 +192,8 @@ export default {
       uni.onWindowResize(this._handleWindowResize);
     }
     this.loadRecentWords();
+    this.loadSoundSettings();
+    this.initClickAudio();
     this.checkAuth();
     this.initializeLifeRecovery();
   },
@@ -198,6 +205,10 @@ export default {
     }
     this.stopAll();
     this.stopLifeRecoveryTicker();
+    if (this.clickAudio) {
+      this.clickAudio.destroy();
+      this.clickAudio = null;
+    }
   },
 
   methods: {
@@ -220,6 +231,40 @@ export default {
         return;
       }
       this.ratioProfile = 'ratio-20-9';
+    },
+
+    loadSoundSettings() {
+      try {
+        const stored = uni.getStorageSync(SOUND_ENABLED_STORAGE_KEY);
+        if (stored === '' || stored === null || stored === undefined) {
+          this.soundEnabled = false;
+          return;
+        }
+        this.soundEnabled = stored === true || stored === 'true' || stored === 1 || stored === '1';
+      } catch (e) {
+        this.soundEnabled = false;
+      }
+    },
+
+    initClickAudio() {
+      if (typeof uni.createInnerAudioContext !== 'function') return;
+      this.clickAudio = uni.createInnerAudioContext();
+      this.clickAudio.autoplay = false;
+      this.clickAudio.loop = false;
+      this.clickAudio.src = CLICK_SFX_SRC;
+    },
+
+    playClickSound() {
+      if (!this.soundEnabled || !this.clickAudio) return;
+      try {
+        this.clickAudio.stop();
+        if (typeof this.clickAudio.seek === 'function') {
+          this.clickAudio.seek(0);
+        }
+        this.clickAudio.play();
+      } catch (e) {
+        // Keep click flow smooth even if audio fails.
+      }
     },
 
     // Auth
@@ -482,7 +527,12 @@ export default {
     },
 
     toggleSound() {
-      uni.showToast({ title: '功能正在开发中', icon: 'none' });
+      this.soundEnabled = !this.soundEnabled;
+      uni.setStorageSync(SOUND_ENABLED_STORAGE_KEY, this.soundEnabled);
+      if (this.soundEnabled) {
+        this.playClickSound();
+      }
+      uni.showToast({ title: this.soundEnabled ? '音效已开启' : '音效已关闭', icon: 'none' });
     },
 
     getShareProviderLabel(provider) {
