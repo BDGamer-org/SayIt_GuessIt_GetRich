@@ -1,6 +1,6 @@
 <template>
   <view class="energy-pill">
-    <view class="circle-btn left-btn">
+    <view class="circle-btn left-btn" @click="handleLeftTap">
       <image class="icon-img" src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23FFFFFF' stroke='%23000000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E"></image>
     </view>
     <view class="center-tube">
@@ -20,7 +20,12 @@ export default {
       default: 5
     }
   },
-  emits: ['add']
+  emits: ['add', 'tap'],
+  methods: {
+    handleLeftTap() {
+      this.$emit('tap');
+    }
+  }
 }
 </script>
 

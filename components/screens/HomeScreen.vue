@@ -4,7 +4,7 @@
     <image class="direction-left-image" src="/static/directionLeft.png" mode="widthFix" />
     <image class="direction-image" src="/static/direction.png" mode="widthFix" />
     <view class="energy-pill-wrapper">
-      <EnergyPill :count="lives" @add="$emit('addEnergy')" />
+      <EnergyPill :count="lives" @tap="handleEnergyTap" @add="handleEnergyAdd" />
       <view v-if="lifeRecoveryCountdownLabel" class="life-countdown-wrap">
         <text class="life-countdown">{{ lifeRecoveryCountdownLabel }}</text>
         <text class="life-countdown-hint">后恢复1生命值</text>
@@ -138,19 +138,28 @@ export default {
     },
 
     slideToNext() {
+      this.$emit('playClickSound');
       if (this.startIndex >= this.maxStartIndex) return;
       const nextIndex = Math.min(this.startIndex + this.visibleCardCount, this.maxStartIndex);
       this.startIndex = nextIndex;
       this.scrollLeft = this.cardStepPx * nextIndex;
     },
     slideToPrev() {
+      this.$emit('playClickSound');
       if (this.startIndex <= 0) return;
       const nextIndex = Math.max(this.startIndex - this.visibleCardCount, 0);
       this.startIndex = nextIndex;
       this.scrollLeft = this.cardStepPx * nextIndex;
+    },
+    handleEnergyTap() {
+      this.$emit('playClickSound');
+    },
+    handleEnergyAdd() {
+      this.$emit('playClickSound');
+      this.$emit('addEnergy');
     }
   },
-  emits: ['select', 'showHistory', 'toggleSound', 'share', 'addEnergy', 'logout']
+  emits: ['select', 'showHistory', 'toggleSound', 'share', 'addEnergy', 'playClickSound', 'logout']
 }
 </script>
 
@@ -258,7 +267,7 @@ export default {
 }
 
 .slide-handle.left {
-  left: 0;
+  left: var(--home-left-handle-offset, -16px);
 }
 
 .slide-handle.disabled {
